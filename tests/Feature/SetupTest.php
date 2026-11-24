@@ -1,9 +1,14 @@
 <?php
 
 use Database\Seeders\RoleSeeder;
+use Intervention\Image\Drivers\Imagick\Driver;
 use Spatie\Permission\Models\Role;
 
-it('serves the home page', function () {
+it('reports healthy on /up', function () {
+    $this->get('/up')->assertOk();
+});
+
+it('serves the storefront home page', function () {
     $this->get('/')->assertOk();
 });
 
@@ -20,10 +25,13 @@ it('uses utf8mb4 on the mysql connection', function () {
 });
 
 it('selects an image driver that is available', function () {
-    $driver = config('intervention-image.driver');
-
-    expect($driver)->toBeIn([
-        \Intervention\Image\Drivers\Imagick\Driver::class,
-        \Intervention\Image\Drivers\Gd\Driver::class,
+    expect(config('intervention-image.driver'))->toBeIn([
+        Driver::class,
+        Intervention\Image\Drivers\Gd\Driver::class,
     ]);
+});
+
+it('reads timezone and currency from config', function () {
+    expect(config('app.timezone'))->toBe('Africa/Accra')
+        ->and(config('shop.currency'))->toBe('GHS');
 });

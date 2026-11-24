@@ -38,6 +38,18 @@ return [
             'report' => false,
         ],
 
+        // Customer design files. Private: never linked into public/ and never
+        // served directly; only reachable through signed URLs (App\Support\PrivateFile).
+        'designs' => [
+            'driver' => 'local',
+            'root' => storage_path('app/designs'),
+            'visibility' => 'private',
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
+        // Mockups and other publicly viewable images (run `php artisan storage:link`).
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
