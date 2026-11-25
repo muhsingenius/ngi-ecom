@@ -27,6 +27,11 @@ class Design extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function cartLines(): HasMany
+    {
+        return $this->hasMany(CartLine::class);
+    }
+
     public function areas(): HasMany
     {
         return $this->hasMany(DesignArea::class);

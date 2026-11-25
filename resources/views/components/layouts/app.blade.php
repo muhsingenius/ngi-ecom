@@ -13,6 +13,8 @@
         @livewireStyles
     </head>
     <body class="flex min-h-full flex-col">
+        <a href="#main" class="sr-only z-50 rounded-control bg-white px-4 py-2 font-semibold text-brand-strong shadow-float focus:not-sr-only focus:absolute focus:left-4 focus:top-4">Skip to content</a>
+
         @php
             $user = auth()->user();
             $links = [
@@ -118,7 +120,7 @@
             </div>
         @endif
 
-        <main class="flex-1">
+        <main id="main" class="flex-1">
             {{ $slot }}
         </main>
 
