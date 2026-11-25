@@ -33,7 +33,7 @@
                 <source type="image/webp" media="(max-width: 640px)" srcset="{{ asset('media/hero-560.webp') }}">
                 <img src="{{ asset('media/hero-1000.webp') }}" width="1000" height="1339" fetchpriority="high"
                      alt="A customer wearing a grey custom-printed T-shirt"
-                     class="relative aspect-[4/3] w-full rounded-[1.5rem] sm:aspect-[4/5] object-cover object-top shadow-float">
+                     class="relative aspect-[1000/1339] w-full rounded-[1.5rem] object-cover object-top shadow-float">
             </picture>
 
             <div class="float-card settle absolute -left-3 top-[22%] sm:-left-8" style="--settle-delay: .25s">
