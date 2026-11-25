@@ -33,6 +33,18 @@ vendor/bin/pint                       # fix code style (pint --test to check); m
 - Payments (Paystack) must use Laravel's HTTP client. **Do not add a Paystack SDK.**
 - Production is cPanel-hosted MySQL, so keep dependencies and deployment compatible with shared hosting (built assets, no long-running Node processes).
 
+## Design system
+
+Defined once in `resources/css/app.css` (Tailwind 4 `@theme` tokens plus component classes); compose these instead of inventing one-off values. It was modelled on the structure of customandprint.com (not its assets, text or branding).
+
+- **Type:** Plus Jakarta Sans only (loaded with the `@fonts` directive, which both layouts must include). Scale classes: `type-display` (56/30px), `type-title` (40/29), `type-heading` (18), `type-lead`; headings are weight 800 with negative tracking. Avoid a trailing period in tight-tracked headings: this font leaves a visible gap before punctuation.
+- **Colour tokens:** `ink`, `copy`, `muted`, `line`, `mist`, `night`, `brand` (+`-strong`, `-tint`), `accent` (+`-strong`, `-tint`). Brand is for actions/links; accent is reserved for dark `section-night` bands.
+- **Shape and depth:** radii `card` 14px, `panel` 10px, `chip` 8px, `control` 7px; shadows `float`, `brand`, `accent`.
+- **Layout:** `container-page` (1220px), `section` (88px padding, 56px mobile) with `section-mist` / `section-night` modifiers; grids use `gap-6`.
+- **Components:** `btn` + `btn-brand|accent|outline`, `btn-lg`, `btn-block`, `link-arrow`, `pill`, `card`, `panel`, `panel-night`, `float-card`, `chip-icon`, `well-icon`, `field`. Blade components: `x-layouts.app`, `x-layouts.guest`, `x-icon`, `x-product-art` (original SVG illustrations), `x-input`, `x-button`.
+- **Motion:** one load-in (`settle` on the hero cards); respect `prefers-reduced-motion`.
+- The landing page (`resources/views/storefront/`) is one partial per section. Product cards and the "Design your own" calls to action only anchor within the page until the catalogue and designer exist; don't link them to non-existent routes.
+
 ## Architecture notes
 
 - **Roles and areas:** `spatie/laravel-permission`, guard `web`. `RoleSeeder::ROLES` is the source of truth for `admin`, `shop`, `customer`. Routes in `routes/web.php`: `/admin` and `/shop` use `['auth', 'role:x', 'verified']` (guest -> login, wrong role -> 403; `auth` must stay before `role`). `User::homePath()` decides where each role lands; it is used by `LoginResponse` and the guest-redirect in `bootstrap/app.php`.

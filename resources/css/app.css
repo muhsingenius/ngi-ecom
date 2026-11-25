@@ -3,11 +3,259 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+/*
+|--------------------------------------------------------------------------
+| Design system
+|--------------------------------------------------------------------------
+| One heavy geometric sans, a cool near-white base, a single saturated brand
+| colour for actions, a warm accent reserved for dark bands, soft floating
+| shadows and a small set of radii. Everything below is a token or a component
+| class; pages should compose these rather than invent one-off values.
+|
+| Rhythm: 24px grid gap, 1220px container, 88px section padding (56px on
+| mobile). Sections alternate white, mist and night.
+*/
+
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Ink and text */
+    --color-ink: #12141c;
+    --color-copy: #565c6e;
+    --color-muted: #6f7587;
+
+    /* Surfaces and lines */
+    --color-line: #e4e6ec;
+    --color-mist: #f6f7fb;
+    --color-night: #0f1320;
+
+    /* Brand: actions, links, focus */
+    --color-brand: #2a4bf0;
+    --color-brand-strong: #1f38c4;
+    --color-brand-tint: #eaeeff;
+
+    /* Accent: highlights on dark bands only */
+    --color-accent: #ffb020;
+    --color-accent-strong: #f29b00;
+    --color-accent-tint: #fff4dc;
+
+    /* Radii: card > panel > chip > control */
+    --radius-card: 0.875rem;
+    --radius-panel: 0.625rem;
+    --radius-chip: 0.5rem;
+    --radius-control: 0.4375rem;
+
+    /* Depth */
+    --shadow-float: 0 15px 35px rgb(18 20 28 / 0.12);
+    --shadow-brand: 0 8px 20px rgb(42 75 240 / 0.22);
+    --shadow-accent: 0 8px 20px rgb(255 176 32 / 0.3);
 }
 
-[x-cloak] {
-    display: none !important;
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        @apply bg-white font-sans text-base leading-relaxed text-copy antialiased;
+        word-spacing: 0.06em;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+        @apply text-ink;
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--color-brand);
+        outline-offset: 2px;
+    }
+
+    [id] {
+        scroll-margin-top: 6rem;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        html {
+            scroll-behavior: auto;
+        }
+    }
+}
+
+@layer components {
+    /* Layout ---------------------------------------------------------- */
+
+    .container-page {
+        width: min(100% - 2.5rem, 76.25rem);
+        margin-inline: auto;
+    }
+
+    .section {
+        padding-block: 3.5rem;
+    }
+
+    @media (min-width: 64rem) {
+        .section {
+            padding-block: 5.5rem;
+        }
+    }
+
+    .section-mist {
+        @apply bg-mist;
+    }
+
+    .section-night {
+        @apply bg-night text-[#aeb7c5];
+    }
+
+    .section-night :is(h1, h2, h3, h4) {
+        @apply text-white;
+    }
+
+    /* Type scale: display 56 / title 40 / heading 18 / lead 18 -------- */
+
+    .type-display {
+        @apply text-[1.875rem]/[1.12] font-extrabold tracking-[-0.025em] text-ink;
+    }
+
+    .type-title {
+        @apply text-[1.8rem]/[1.15] font-extrabold tracking-[-0.025em];
+    }
+
+    .type-heading {
+        @apply text-lg/[1.3] font-extrabold tracking-[-0.01em];
+    }
+
+    .type-lead {
+        @apply text-base/[1.75] text-copy;
+    }
+
+    @media (min-width: 48rem) {
+        .type-display {
+            @apply text-[3.5rem]/[1.08];
+        }
+
+        .type-title {
+            @apply text-[2.5rem]/[1.15];
+        }
+
+        .type-lead {
+            @apply text-lg/[1.75];
+        }
+    }
+
+    .section-night .type-lead {
+        @apply text-[#aeb7c5];
+    }
+
+    /* Pill label ------------------------------------------------------ */
+
+    .pill {
+        @apply inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[0.8125rem] font-semibold text-brand-strong shadow-[0_2px_10px_rgb(18_20_28/0.06)];
+    }
+
+    .section-night .pill {
+        @apply bg-white/5 text-accent shadow-none ring-1 ring-white/10;
+    }
+
+    /* Buttons --------------------------------------------------------- */
+
+    .btn {
+        @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-control px-5 text-sm font-bold transition duration-150 ease-out;
+    }
+
+    .btn-brand {
+        @apply bg-brand text-white shadow-brand hover:bg-brand-strong;
+    }
+
+    .btn-accent {
+        @apply bg-accent text-ink shadow-accent hover:bg-accent-strong;
+    }
+
+    .btn-outline {
+        @apply border border-line bg-white text-ink hover:border-ink;
+    }
+
+    .btn-lg {
+        @apply min-h-12 px-6 text-[0.9375rem];
+    }
+
+    .btn-block {
+        @apply w-full;
+    }
+
+    .link-arrow {
+        @apply inline-flex items-center gap-2 font-semibold text-brand-strong hover:underline;
+    }
+
+    /* Surfaces -------------------------------------------------------- */
+
+    .card {
+        @apply overflow-hidden rounded-card bg-mist;
+    }
+
+    .panel {
+        @apply rounded-panel border border-line bg-white;
+    }
+
+    .panel-night {
+        @apply rounded-card border border-white/10 bg-white/[0.04];
+    }
+
+    .float-card {
+        @apply flex items-center gap-3 rounded-panel bg-white px-4 py-3 shadow-float;
+    }
+
+    .chip-icon {
+        @apply inline-flex size-10 shrink-0 items-center justify-center rounded-chip bg-brand-tint text-brand;
+    }
+
+    .section-night .chip-icon {
+        @apply bg-accent/15 text-accent;
+    }
+
+    .well-icon {
+        @apply inline-flex size-[4.375rem] items-center justify-center rounded-full bg-brand-tint text-brand;
+    }
+
+    /* Forms ----------------------------------------------------------- */
+
+    .field {
+        @apply block min-h-11 w-full rounded-control border border-line bg-white px-3 text-base text-ink shadow-sm placeholder:text-muted focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30;
+    }
+
+    .field-error {
+        @apply border-red-500;
+    }
+}
+
+/* One orchestrated moment: the hero cards settle in once on load. */
+@keyframes settle {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.settle {
+    animation: settle 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: var(--settle-delay, 0s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .settle {
+        animation: none;
+    }
 }

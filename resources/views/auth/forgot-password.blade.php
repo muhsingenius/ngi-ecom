@@ -1,6 +1,6 @@
 <x-layouts.guest title="Forgot password" heading="Forgot your password?" subheading="Enter your email and we'll send you a reset link.">
     @if (session('status'))
-        <p class="mb-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">{{ session('status') }}</p>
+        <p class="mb-4 rounded-control bg-brand-tint px-3 py-2 text-sm text-brand-strong">{{ session('status') }}</p>
     @endif
 
     <form method="POST" action="{{ route('password.email') }}" class="space-y-4">
@@ -11,6 +11,6 @@
     </form>
 
     <x-slot:footer>
-        <a href="{{ route('login') }}" class="font-medium text-indigo-600 hover:underline">Back to log in</a>
+        <a href="{{ route('login') }}" class="font-medium text-brand-strong hover:underline">Back to log in</a>
     </x-slot:footer>
 </x-layouts.guest>

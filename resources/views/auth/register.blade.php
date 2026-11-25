@@ -10,6 +10,6 @@
     </form>
 
     <x-slot:footer>
-        Already registered? <a href="{{ route('login') }}" class="font-medium text-indigo-600 hover:underline">Log in</a>
+        Already registered? <a href="{{ route('login') }}" class="font-medium text-brand-strong hover:underline">Log in</a>
     </x-slot:footer>
 </x-layouts.guest>
