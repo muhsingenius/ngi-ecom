@@ -105,6 +105,13 @@
                 </dl>
             </div>
 
+            @if ($order->isPaid() && ! $order->cancelled_at)
+                <form method="POST" action="{{ route('orders.reorder', ['order' => $order->number, 't' => $token]) }}" class="mt-6">
+                    @csrf
+                    <button class="btn btn-outline">Order the same again</button>
+                </form>
+            @endif
+
             <div class="mt-8">
                 <h2 class="type-heading">Progress</h2>
                 <ol class="mt-3 space-y-3 border-l-2 border-line pl-5">

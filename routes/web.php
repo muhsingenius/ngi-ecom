@@ -15,6 +15,7 @@ use App\Http\Controllers\DesignAssetController;
 use App\Http\Controllers\DesignController;
 use App\Http\Controllers\DesignOrderController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaystackWebhookController;
 use App\Http\Controllers\PrivateFileController;
 use App\Http\Controllers\ProofController;
@@ -22,6 +23,8 @@ use App\Http\Controllers\Shop\JobController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'storefront.home')->name('home');
+
+Route::get('/contact', [PageController::class, 'contact'])->name('contact');
 
 // Public catalogue.
 Route::get('/products', [CatalogueController::class, 'index'])->name('catalogue.index');
@@ -55,6 +58,7 @@ Route::middleware('designer')->group(function () {
 Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 Route::get('/orders/{order}/status', [OrderController::class, 'status'])->name('orders.status');
 Route::post('/orders/{order}/pay', [OrderController::class, 'pay'])->middleware('throttle:10,1')->name('orders.pay');
+Route::post('/orders/{order}/reorder', [OrderController::class, 'reorder'])->middleware(['designer', 'throttle:10,1'])->name('orders.reorder');
 Route::get('/proofs/{token}', [ProofController::class, 'show'])->name('proofs.show');
 Route::get('/proofs/{token}/image', [ProofController::class, 'image'])->name('proofs.image');
 Route::post('/proofs/{token}/approve', [ProofController::class, 'approve'])->middleware('throttle:20,1')->name('proofs.approve');

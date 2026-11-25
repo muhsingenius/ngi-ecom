@@ -82,6 +82,27 @@ class Settings
                 'default' => 5,
                 'rules' => ['required', 'integer', 'min:0'],
             ],
+            'store.phone' => [
+                'label' => 'Store phone number',
+                'help' => 'Shown on the contact page and in the footer.',
+                'type' => 'string',
+                'default' => null,
+                'rules' => ['nullable', 'string', 'max:40'],
+            ],
+            'store.whatsapp' => [
+                'label' => 'Store WhatsApp number',
+                'help' => 'Digits with the country code, for example 233241234567. Adds a chat link on the contact page.',
+                'type' => 'string',
+                'default' => null,
+                'rules' => ['nullable', 'regex:/^\+?[0-9]{8,15}$/'],
+            ],
+            'store.email' => [
+                'label' => 'Store email address',
+                'help' => 'Shown on the contact page. Customers reply to order emails here.',
+                'type' => 'string',
+                'default' => null,
+                'rules' => ['nullable', 'email', 'max:255'],
+            ],
         ];
     }
 

@@ -19,5 +19,8 @@ it('defines exactly the expected setting keys', function () {
         'delivery.free_threshold',
         'shop.notification_email',
         'orders.turnaround_days',
+        'store.phone',
+        'store.whatsapp',
+        'store.email',
     ]);
 });

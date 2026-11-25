@@ -69,7 +69,7 @@
                                                 <option :value="z.id" x-text="`${z.name} · ${z.fee === 0 ? 'free' : money(z.fee)}${z.eta ? ' · ' + z.eta : ''}`"></option>
                                             </template>
                                         </select>
-                                        <p class="mt-1 text-xs text-muted">Not in one of these areas? Choose pickup, or contact the store about delivery to you.</p>
+                                        <p class="mt-1 text-xs text-muted">Not in one of these areas? Choose pickup, or <a href="{{ route('contact') }}" class="underline">contact the store</a> about delivery to you.</p>
                                     </div>
                                     <p class="text-sm text-copy" x-show="zone && zone.courier" x-cloak>Courier: <span x-text="zone?.courier"></span></p>
                                     <div>

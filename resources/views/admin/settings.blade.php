@@ -8,8 +8,10 @@
             @php($field = str_replace('.', '_', $key))
             @if (isset($definition['options']))
                 <x-f.select :name="$field" :label="$definition['label']" :options="$definition['options']" :value="$values[$key]" :help="$definition['help']" />
-            @elseif ($key === 'shop.notification_email')
+            @elseif (in_array($key, ['shop.notification_email', 'store.email'], true))
                 <x-f.input :name="$field" :label="$definition['label']" type="email" :value="$values[$key]" :help="$definition['help']" />
+            @elseif ($definition['type'] === 'string')
+                <x-f.input :name="$field" :label="$definition['label']" type="text" :value="$values[$key]" :help="$definition['help']" />
             @else
                 <x-f.input :name="$field" :label="$definition['label']" type="number" step="{{ $definition['type'] === 'float' ? '0.01' : '1' }}" min="0" :value="$values[$key]" :help="$definition['help']" />
             @endif

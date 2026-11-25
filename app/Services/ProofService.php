@@ -122,6 +122,19 @@ class ProofService
      */
     public function startRevision(OrderLine $line, Request $request): Design
     {
+        $line->loadMissing('order');
+
+        return $this->cloneFromOrderLine($line, $request, $line->id, 'Changes for '.$line->order->number);
+    }
+
+    /**
+     * A fresh, editable copy of an order line's design owned by this visitor. It joins the
+     * original design's group, so bulk tiers that span designs still treat it as the same one.
+     *
+     * @param  int|null  $revisesLineId  set when the copy is to replace that order line's files on save
+     */
+    public function cloneFromOrderLine(OrderLine $line, Request $request, ?int $revisesLineId, string $name): Design
+    {
         $line->loadMissing(['order', 'areas', 'items']);
         $product = Product::with('printAreas')->find($line->product_id);
 
@@ -138,9 +151,9 @@ class ProofService
             'session_token' => $request->user() ? null : $request->session()->get('designer_token'),
             'product_id' => $product->id,
             'product_colour_id' => $colourId ?? $product->colours()->value('id'),
-            'name' => 'Changes for '.$line->order->number,
+            'name' => $name,
             'group_key' => $line->design_group_key ?: (string) Str::uuid(),
-            'revises_order_line_id' => $line->id,
+            'revises_order_line_id' => $revisesLineId,
         ]);
 
         $assetMap = [];

@@ -130,6 +130,8 @@
                 <div>
                     <p class="text-lg font-extrabold tracking-tight text-white">{{ config('app.name') }}</p>
                     <p class="mt-3 max-w-xs leading-relaxed">Custom printed products, made to order and delivered to you.</p>
+                    @php($storePhone = app(\App\Services\Settings::class)->string('store.phone'))
+                    @if ($storePhone)<p class="mt-3"><a href="tel:{{ preg_replace('/[^\d+]/', '', $storePhone) }}" class="font-semibold text-white">{{ $storePhone }}</a></p>@endif
                 </div>
 
                 <div>
@@ -137,6 +139,7 @@
                     <ul class="mt-4 space-y-3">
                         <li><a href="{{ route('catalogue.index') }}" class="hover:text-white">Products</a></li>
                         <li><a href="{{ route('home') }}#how-it-works" class="hover:text-white">How it works</a></li>
+                        <li><a href="{{ route('contact') }}" class="hover:text-white">Contact</a></li>
                     </ul>
                 </div>
 

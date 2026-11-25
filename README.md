@@ -1,30 +1,25 @@
 # POD Store
 
-Custom print-on-demand store. Currently built: foundation, authentication, role-based areas, a settings system, private file handling and background-work scaffolding. **No store features yet** (catalogue, designer, cart, payments).
+A custom print store for a cPanel subdomain. Customers design t-shirts, polos, hoodies, caps and bracelets in the browser and order one or hundreds. Bulk prices are public and drop with quantity, groups can add a name and number per item, large orders get a proof to approve, and a local print shop receives a complete job sheet with print-ready files.
 
-Docs: [DEPLOY.md](DEPLOY.md) (cPanel deployment). The design document is not in this repository yet; link it here once it exists.
+Docs: [DEPLOY.md](DEPLOY.md) (cPanel deployment, Paystack, cron, backups) · [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md) (how the design brief maps to the code, and where the build differs). The original design brief is the owner's document and is not stored in this repository.
+
+## What it does
+
+| Who | What |
+|---|---|
+| Customer (guest or account) | Browse products with public tier prices, design in the browser, choose sizes/colours or upload a roster of names and numbers, see the price live, check out by delivery zone or pickup, pay with card or Mobile Money (Paystack), approve a proof, follow the order, reorder, keep saved designs |
+| Admin | Manage products, colours, sizes, print areas, mockups, tier prices, delivery zones, pickup points, settings; handle orders (proofs, dispatch, cancel, refunds); see reports |
+| Print shop | Separate login; sees released jobs only, downloads the PDF job sheet and a ZIP of print files, sets Queued → Printing → Ready |
 
 ## Stack
 
 - PHP 8.3+ (Laravel 13 requirement; developed on 8.5), Laravel 13, MySQL/MariaDB (utf8mb4 everywhere)
-- Blade + Livewire 4 (ships Alpine.js) + Tailwind CSS 4 via Vite
-- Pest for tests, Laravel Pint for code style
-- `laravel/fortify` for auth (login, register, logout, password reset, email verification) with Blade views
-- `spatie/laravel-permission` (roles seeded: `admin`, `shop`, `customer`)
-- `laravel/boost` (dev) for agent guidelines
-- `intervention/image` + `intervention/image-laravel` (Imagick preferred, GD fallback, see `config/intervention-image.php`)
-- `barryvdh/laravel-dompdf` and `fabric` (npm): installed only, used later
-- No Paystack SDK: payments will use Laravel's HTTP client
-
-## Areas and roles
-
-| Path | Who | Notes |
-|---|---|---|
-| `/` | everyone | storefront placeholder |
-| `/admin` | `admin` | guests go to login, other roles get 403 |
-| `/shop` | `shop` | job list placeholder, same rules |
-
-After login: admins go to `/admin`, shop users to `/shop`, customers to `/`. New registrations get the `customer` role. The first admin and shop users are created by `db:seed` from `SEED_*` values in `.env` (skipped if empty).
+- Blade + Livewire 4 (ships Alpine.js) + Tailwind CSS 4 via Vite; Fabric.js 7 for the designer
+- `laravel/fortify` (login, register, password reset, email verification), `spatie/laravel-permission` (roles `admin`, `shop`, `customer`)
+- `intervention/image` (Imagick preferred, GD fallback), `barryvdh/laravel-dompdf` (job sheets)
+- Payments through Laravel's HTTP client; **no Paystack SDK**
+- Pest for tests, Laravel Pint for style, Laravel Boost for agent guidelines
 
 ## Local setup (XAMPP for MySQL only)
 
@@ -46,31 +41,39 @@ Run the app with `php artisan serve`, **not** XAMPP's Apache. XAMPP provides MyS
    cp .env.example .env        # defaults to mysql / 127.0.0.1 / root / empty password / ecom
    # set SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD, SEED_SHOP_EMAIL, SEED_SHOP_PASSWORD in .env
    php artisan key:generate
-   php artisan migrate --seed  # tables, roles, default settings, admin + shop users
+   php artisan migrate --seed  # tables, roles, settings, staff, and (locally) a demo catalogue and delivery zones
    php artisan storage:link
    ```
 4. Run: `composer run dev` (server + queue + vite), or `php artisan serve` with `npm run dev`.
-5. Tests: `php artisan test` (or `vendor/bin/pest`; single file: `vendor/bin/pest tests/Feature/SettingsTest.php`). Uses the `ecom_test` MySQL database.
+5. Tests: `php artisan test` (or `vendor/bin/pest`; one file: `vendor/bin/pest tests/Feature/PricingTest.php`). They use the `ecom_test` MySQL database and fake all outside services (Paystack, mail, storage).
 6. Code style: `vendor/bin/pint` (fix) or `vendor/bin/pint --test` (check).
 
-Verification emails are written to `storage/logs/laravel.log` while `MAIL_MAILER=log`.
+Local mail goes to `storage/logs/laravel.log` while `MAIL_MAILER=log`. Without Paystack keys, checkout still saves the order and tells the customer payment is unavailable; an admin can record a manual payment on the order page to move it on.
 
 ### PHP extensions
 
-Enable these in `php.ini` (remove the leading `;`): `gd`, `intl`, `zip`, `openssl`, `sodium`, `curl`, `fileinfo`, `mbstring`, `pdo_mysql`, `bcmath`. Optionally install `imagick`; when loaded it is used automatically, otherwise GD. Force a driver with `IMAGE_DRIVER` in `.env`.
+Enable these in `php.ini` (remove the leading `;`): `gd`, `intl`, `zip`, `openssl`, `sodium`, `curl`, `fileinfo`, `mbstring`, `pdo_mysql`, `bcmath`. Optionally install `imagick`; when loaded it is used automatically, otherwise GD. Force a driver with `IMAGE_DRIVER` in `.env`. For the designer, raise `upload_max_filesize` and `post_max_size` to 64M and `memory_limit` to 512M locally too.
 
-## Settings
+## Where things live
 
-Store settings live in the `settings` table, read through the cached `App\Services\Settings` service. Every setting is declared once in `Settings::definitions()` (type, default, validation rules); `set()` validates before saving and `db:seed` inserts missing defaults without overwriting existing values.
+| Area | Look at |
+|---|---|
+| Pricing | `app/Services/PriceCalculator.php`, `app/Enums/TierScope.php` |
+| Settings (single list of keys, defaults, rules) | `app/Services/Settings.php` |
+| Designer | `resources/js/designer.js`, `resources/views/designs/`, `app/Http/Controllers/DesignController.php`, `config/designer.php` |
+| Cart and checkout | `app/Services/CartService.php`, `OrderService.php`, `DeliveryCalculator.php`, `Paystack.php` |
+| Proofs | `app/Services/ProofService.php`, `ProofImage.php`, `app/Http/Controllers/ProofController.php` |
+| Print shop | `app/Http/Controllers/Shop/JobController.php`, `app/Services/JobSheet.php` |
+| Design system | `resources/css/app.css` (tokens and component classes) |
 
-## Files
+## Staff logins
 
-- `designs` disk (`storage/app/designs`): private customer artwork, never linked or served directly. Use `App\Support\PrivateFile::url($path)` for a signed, expiring link served by `files.download`.
-- `public` disk: mockups; run `php artisan storage:link`.
+First admin and print shop users come from the `SEED_*` values at `db:seed`. Add or reset more any time:
 
-## Background work
-
-cPanel only offers cron, so one cron line runs everything (see [DEPLOY.md](DEPLOY.md)): `schedule:run` every minute, which drains the database queue (`queue:work --stop-when-empty`, no overlap) and runs `uploads:cleanup` daily. Locally, `composer run dev` runs a queue worker for you.
+```bash
+php artisan staff:create shop@example.com shop --name="Print shop"
+php artisan staff:create boss@example.com admin --reset
+```
 
 ## Production
 

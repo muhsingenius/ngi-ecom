@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Custom print-on-demand store (Laravel 13, PHP 8.3+, developed on 8.5). Built so far: foundation, auth (Fortify), role areas, settings, private files, scheduler. **No store features yet** (catalogue, designer, cart, payments); those arrive in later prompts, so don't assume they exist. Deployment is documented in DEPLOY.md.
+Custom print store for individuals and bulk groups (Laravel 13, PHP 8.3+, developed on 8.5): catalogue with quantity-tier pricing, browser designer (Fabric.js), names and numbers, cart, checkout with delivery zones, Paystack payments, proof approval, print shop portal, admin with refunds and reports. The whole brief is built; docs/IMPLEMENTATION.md maps each part of the brief to code and lists known differences. Deployment is in DEPLOY.md.
 
 ## Commands
 
@@ -43,7 +43,8 @@ Defined once in `resources/css/app.css` (Tailwind 4 `@theme` tokens plus compone
 - **Layout:** `container-page` (1220px), `section` (88px padding, 56px mobile) with `section-mist` / `section-night` modifiers; grids use `gap-6`.
 - **Components:** `btn` + `btn-brand|accent|outline`, `btn-lg`, `btn-block`, `link-arrow`, `pill`, `card`, `panel`, `panel-night`, `float-card`, `chip-icon`, `well-icon`, `field`. Blade components: `x-layouts.app`, `x-layouts.guest`, `x-icon`, `x-product-art` (original SVG illustrations), `x-input`, `x-button`.
 - **Motion:** one load-in (`settle` on the hero cards); respect `prefers-reduced-motion`.
-- The landing page (`resources/views/storefront/`) is one partial per section. Product cards and the "Design your own" calls to action only anchor within the page until the catalogue and designer exist; don't link them to non-existent routes.
+- The landing page (`resources/views/storefront/`) is one partial per section. The mug, tote and sticker photos are illustrative, not sellable products; only the tee, hoodie and cap cards link to the catalogue.
+- Tailwind only generates classes it sees at build time: run `npm run build` after adding utility classes in Blade, or new classes will look unstyled. `public/build` is committed.
 
 ## Architecture notes
 
@@ -51,9 +52,19 @@ Defined once in `resources/css/app.css` (Tailwind 4 `@theme` tokens plus compone
 - **Auth:** Fortify with Blade views in `resources/views/auth` (registered in `FortifyServiceProvider`). Only registration, password reset and email verification are enabled; 2FA/passkeys/profile features were deliberately removed. `CreateNewUser` assigns the `customer` role. Layouts are anonymous components `x-layouts.app` / `x-layouts.guest`.
 - **Settings:** `App\Services\Settings` reads/writes the `settings` table through the cache. `Settings::definitions()` is the single source of keys, types, defaults and validation rules; add new settings there. Values are JSON-encoded, and a stored null (e.g. `proof.threshold` off) overrides a non-null default.
 - **Private files:** disk `designs` (`storage/app/designs`) is never public. Generate links with `App\Support\PrivateFile::url()`; they are served by the `files.download` route behind `signed`, restricted to `PrivateFile::DOWNLOADABLE_DISKS`.
-- **Background work:** cPanel has cron only. `routes/console.php` schedules `queue:work --stop-when-empty` every minute (no overlap) and `uploads:cleanup` (placeholder, logs only) daily; one cron entry runs `schedule:run`. Seed users and Paystack keys are read via `config/shop.php`, not `env()` directly, so config caching works.
+- **Background work:** cPanel has cron only. `routes/console.php` schedules `queue:work --stop-when-empty` every minute (no overlap), `orders:expire-proofs` hourly and `uploads:cleanup` daily; one cron entry runs `schedule:run`. Seed users, Paystack keys and the demo-data switch are read via `config/shop.php`, not `env()` directly, so config caching works.
 - **Image driver:** `config/intervention-image.php` picks Imagick if the extension is loaded, else GD; override with `IMAGE_DRIVER`. XAMPP currently has no Imagick, so GD is in use.
-- **Installed but not yet used:** `intervention/image`, `barryvdh/laravel-dompdf`, and npm `fabric` (planned for the product designer).
+
+## Store subsystems (read before changing them)
+
+- **Pricing:** `PriceCalculator` is the only place prices are decided; money is integer pesewas (`App\Support\Money`). The product page, `/cart/quote`, cart, checkout and orders all call it. Never trust a price from the browser. Tier scope = `pricing.tier_scope` setting, with a per-product override; designs reused on another product share `designs.group_key`.
+- **Catalogue:** products (a quality is a separate product), `ProductColour` × `ProductVariant` (size, surcharge), `PrintArea` (cm size, method, limits, extra fee, box on the mockup), `Mockup` per colour per area. `CatalogueSeeder`/`DeliverySeeder` give a demo store (on by default except production). Placeholder mockups come from `MockupGenerator`.
+- **Designer:** `resources/js/designer.js` (separate Vite entry; Fabric 7 types are lowercase like `'i-text'`, default object origin is **centre**, so clip rectangles must set `originX/originY: 'left'/'top'`). Canvases live outside Alpine state. 20 px/cm logical, exported at 300 DPI. The server re-validates everything in `DesignController::persist` and `DesignRules`. Uploads: `DesignUploads` (+ `SvgSanitizer`); a saved design's files are on the private `designs` disk.
+- **Orders:** `OrderService` owns the lifecycle (`place` → `markPaid` → `release` → shop `setStage` → admin `dispatch`/`markPickedUp`/`complete`, `cancel`). An order is paid **only** via `PaystackWebhookController::confirm` (signature, amount, currency) or an admin verify. `OrderSnapshot` copies print files into `orders/{id}/…` so later design edits never change an order; never delete those.
+- **Proofs:** `ProofService` (generate, replace, approve, request changes, revise via a cloned design with `designs.revises_order_line_id`, timing override); links are secret tokens, no login.
+- **Print shop:** `Shop\JobController` shows only released orders (`Order::released()`), never prices; `JobSheet` builds the PDF and ZIP.
+- **Ownership:** guests own designs, uploads and carts through `session('designer_token')` (set by the `designer` middleware, handed to the account at login in `AppServiceProvider`). Scope with `->ownedBy($request)`.
+- **Tests:** shared helpers (`savedDesign`, `addToCart`, `cartWith`, `releasedOrder`, `proofOrder`, `webhook`, …) are in `tests/Pest.php`. Fake `Storage` (`public`, `designs`), `Mail` and `Http` in each test file; `Http::fake` stubs registered first win, so swap the factory to override.
 - Breeze was removed (unmaintained for current Laravel); don't reinstall it.
 - Laravel Boost is installed (dev); its guidelines are appended below and skills are in `.claude/skills`. `AGENTS.md` is still the original bootstrap stub.
 
