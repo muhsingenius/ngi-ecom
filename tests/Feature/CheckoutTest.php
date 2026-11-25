@@ -85,7 +85,7 @@ describe('placing an order', function () {
         $res->assertRedirect('https://checkout.paystack.com/abc');
 
         $order = Order::with(['lines.items', 'lines.areas'])->first();
-        expect($order->number)->toBe('POD-'.str_pad((string) $order->id, 5, '0', STR_PAD_LEFT))
+        expect($order->number)->toBe(config('shop.order_prefix').'-'.str_pad((string) $order->id, 5, '0', STR_PAD_LEFT))
             ->and($order->status)->toBe(OrderStatus::PendingPayment)
             ->and((float) $order->subtotal)->toBe(165.0)
             ->and((float) $order->delivery_fee)->toBe(30.0)
@@ -189,7 +189,7 @@ describe('placing an order', function () {
         $this->post('/checkout', checkoutData());
 
         expect(Order::first()->user_id)->toBe($user->id);
-        $this->get('/account/orders')->assertOk()->assertSee('POD-');
+        $this->get('/account/orders')->assertOk()->assertSee('PRT-');
     });
 
     it('keeps the files in the order when the design is later edited or deleted', function () {

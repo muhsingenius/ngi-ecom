@@ -6,6 +6,12 @@
         <x-input name="password" label="Password" type="password" autocomplete="new-password" required />
         <x-input name="password_confirmation" label="Confirm password" type="password" autocomplete="new-password" required />
 
+        <p class="text-xs leading-relaxed text-muted">
+            We use your details to run your account and orders, as explained in our
+            <a href="{{ route('privacy') }}" class="underline" target="_blank">Privacy policy</a> and
+            <a href="{{ route('data-protection') }}" class="underline" target="_blank">Data protection</a> page.
+        </p>
+
         <x-button>Create account</x-button>
     </form>
 

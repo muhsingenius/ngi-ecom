@@ -116,6 +116,7 @@
 
                         <button class="btn btn-brand btn-lg btn-block">{{ $proofRequired && $proofTiming === 'proof_then_pay' ? 'Place order' : 'Place order and pay' }}</button>
                         <p class="text-xs text-muted">Pay by card or Mobile Money through Paystack.</p>
+                        <p class="text-xs text-muted">We use your details to make and deliver your order, as explained in our <a href="{{ route('privacy') }}" class="underline" target="_blank">Privacy policy</a> and <a href="{{ route('data-protection') }}" class="underline" target="_blank">Data protection</a> page.</p>
                         <a href="{{ route('cart.index') }}" class="link-arrow justify-center text-sm">Back to cart</a>
                     </aside>
                 </form>

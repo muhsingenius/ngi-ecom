@@ -234,6 +234,56 @@
     .field-error {
         @apply border-red-500;
     }
+
+    /* Long-form pages (About, Privacy, Data protection) ---------------- */
+
+    .legal {
+        @apply max-w-3xl text-base leading-relaxed text-copy;
+    }
+
+    .legal h2 {
+        @apply mt-12 text-2xl font-extrabold tracking-tight text-ink;
+    }
+
+    .legal h3 {
+        @apply mt-8 text-lg font-bold text-ink;
+    }
+
+    .legal p,
+    .legal ul,
+    .legal ol,
+    .legal table {
+        @apply mt-4;
+    }
+
+    .legal ul {
+        @apply list-disc space-y-2 pl-6;
+    }
+
+    .legal ol {
+        @apply list-decimal space-y-2 pl-6;
+    }
+
+    .legal a {
+        @apply font-semibold text-brand-strong underline;
+    }
+
+    .legal strong {
+        @apply font-semibold text-ink;
+    }
+
+    .legal table {
+        @apply w-full border-collapse text-left text-sm;
+    }
+
+    .legal th,
+    .legal td {
+        @apply border border-line px-3 py-2 align-top;
+    }
+
+    .legal th {
+        @apply bg-mist font-semibold text-ink;
+    }
 }
 
 /* One orchestrated moment: the hero cards settle in once on load. */

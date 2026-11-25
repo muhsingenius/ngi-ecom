@@ -21,6 +21,7 @@
                 ['Home', route('home'), request()->routeIs('home')],
                 ['Products', route('catalogue.index'), request()->routeIs('catalogue.*')],
                 ['How it works', route('home').'#how-it-works', false],
+                ['About', route('about'), request()->routeIs('about')],
             ];
 
             if ($user?->hasRole('admin')) {
@@ -126,10 +127,11 @@
 
         {{-- Footer --}}
         <footer class="border-t border-white/10 bg-night text-sm text-[#aeb7c5]">
-            <div class="container-page grid gap-10 py-14 md:grid-cols-[1.5fr_1fr_1fr]">
+            <div class="container-page grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
                 <div>
                     <p class="text-lg font-extrabold tracking-tight text-white">{{ config('app.name') }}</p>
                     <p class="mt-3 max-w-xs leading-relaxed">Custom printed products, made to order and delivered to you.</p>
+                    <p class="mt-3 max-w-xs leading-relaxed">A social enterprise of <a href="{{ config('shop.organisation.url') }}" class="font-semibold text-white underline" target="_blank" rel="noopener">{{ config('shop.organisation.name') }}</a>.</p>
                     @php($storePhone = app(\App\Services\Settings::class)->string('store.phone'))
                     @if ($storePhone)<p class="mt-3"><a href="tel:{{ preg_replace('/[^\d+]/', '', $storePhone) }}" class="font-semibold text-white">{{ $storePhone }}</a></p>@endif
                 </div>
@@ -140,6 +142,15 @@
                         <li><a href="{{ route('catalogue.index') }}" class="hover:text-white">Products</a></li>
                         <li><a href="{{ route('home') }}#how-it-works" class="hover:text-white">How it works</a></li>
                         <li><a href="{{ route('contact') }}" class="hover:text-white">Contact</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <p class="font-bold text-white">About and legal</p>
+                    <ul class="mt-4 space-y-3">
+                        <li><a href="{{ route('about') }}" class="hover:text-white">About {{ config('app.name') }}</a></li>
+                        <li><a href="{{ route('privacy') }}" class="hover:text-white">Privacy policy</a></li>
+                        <li><a href="{{ route('data-protection') }}" class="hover:text-white">Data protection</a></li>
                     </ul>
                 </div>
 
@@ -157,7 +168,13 @@
             </div>
 
             <div class="border-t border-white/10 py-5">
-                <p class="container-page">&copy; {{ now()->year }} {{ config('app.name') }}</p>
+                <div class="container-page flex flex-col gap-2 text-xs sm:flex-row sm:items-center sm:justify-between">
+                    <p>&copy; {{ now()->year }} {{ config('app.name') }}. All rights reserved.</p>
+                    <p>
+                        Developed by <span class="font-semibold text-white">{{ config('shop.developer.name') }}</span>
+                        · <a href="tel:{{ config('shop.developer.phone') }}" class="font-semibold text-white hover:underline">{{ config('shop.developer.phone') }}</a>
+                    </p>
+                </div>
             </div>
         </footer>
 

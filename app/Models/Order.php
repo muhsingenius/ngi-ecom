@@ -38,7 +38,7 @@ class Order extends Model
         });
 
         static::created(function (Order $order) {
-            $order->forceFill(['number' => 'POD-'.str_pad((string) $order->id, 5, '0', STR_PAD_LEFT)])->saveQuietly();
+            $order->forceFill(['number' => config('shop.order_prefix', 'PRT').'-'.str_pad((string) $order->id, 5, '0', STR_PAD_LEFT)])->saveQuietly();
         });
     }
 

@@ -25,6 +25,9 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'storefront.home')->name('home');
 
 Route::get('/contact', [PageController::class, 'contact'])->name('contact');
+Route::get('/about', [PageController::class, 'about'])->name('about');
+Route::get('/privacy', [PageController::class, 'privacy'])->name('privacy');
+Route::get('/data-protection', [PageController::class, 'dataProtection'])->name('data-protection');
 
 // Public catalogue.
 Route::get('/products', [CatalogueController::class, 'index'])->name('catalogue.index');

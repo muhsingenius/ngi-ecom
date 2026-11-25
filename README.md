@@ -1,4 +1,4 @@
-# POD Store
+# PRINTABLE
 
 A custom print store for a cPanel subdomain. Customers design t-shirts, polos, hoodies, caps and bracelets in the browser and order one or hundreds. Bulk prices are public and drop with quantity, groups can add a name and number per item, large orders get a proof to approve, and a local print shop receives a complete job sheet with print-ready files.
 

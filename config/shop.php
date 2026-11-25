@@ -10,6 +10,26 @@ return [
 
     'private_url_ttl_minutes' => 15,
 
+    // Order numbers look like PRT-00042.
+    'order_prefix' => env('ORDER_PREFIX', 'PRT'),
+
+    /*
+    | The organisation behind the store (shown on the About page and in the footer).
+    */
+
+    'organisation' => [
+        'name' => 'Northern Girl Initiative',
+        'short' => 'NGI',
+        'url' => 'https://northerngirlinitiative.org',
+        'donate_url' => 'https://northerngirlinitiative.org/donate/',
+        'address' => 'Sabonjida, Pagsara Road, Tamale, Ghana',
+    ],
+
+    'developer' => [
+        'name' => 'Gadabsi Infotech',
+        'phone' => '0248724619',
+    ],
+
     /*
     | Paystack keys. Payments use Laravel's HTTP client (no SDK).
     */
