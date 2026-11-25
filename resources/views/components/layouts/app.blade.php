@@ -73,6 +73,14 @@
                 </nav>
 
                 <div class="flex items-center gap-3">
+                    @php($cartCount = app(\App\Services\CartService::class)->count(request()))
+                    <a href="{{ route('cart.index') }}" class="relative inline-flex size-11 items-center justify-center rounded-chip text-ink hover:bg-mist" aria-label="Cart, {{ $cartCount }} {{ \Illuminate\Support\Str::plural('item', $cartCount) }}">
+                        <x-icon name="bag" class="size-6" />
+                        @if ($cartCount)
+                            <span class="absolute -right-0.5 -top-0.5 flex min-w-5 items-center justify-center rounded-full bg-brand px-1 text-[0.7rem] font-bold leading-5 text-white">{{ $cartCount }}</span>
+                        @endif
+                    </a>
+
                     <a href="{{ route('catalogue.index') }}" class="btn btn-brand hidden sm:inline-flex">
                         <x-icon name="pencil" class="size-4" /> Design your own
                     </a>

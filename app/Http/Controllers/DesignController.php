@@ -67,6 +67,7 @@ class DesignController extends Controller
             'product_id' => ['required', 'integer', 'exists:products,id'],
             'colour_id' => ['required', 'integer', 'exists:product_colours,id'],
             'name' => ['nullable', 'string', 'max:120'],
+            'group_from' => ['nullable', 'integer'],
             'areas' => ['required', 'array', 'min:1', 'max:10'],
             'areas.*.print_area_id' => ['required', 'integer'],
             'areas.*.state' => ['required', 'string', 'max:6000000'],
@@ -141,10 +142,18 @@ class DesignController extends Controller
             return response()->json(['message' => 'Add something to your design first.'], 422);
         }
 
-        $design = DB::transaction(function () use ($request, $design, $product, $colour, $prepared) {
+        // A design reused on another product joins the original's group so quantity tiers can span products.
+        $groupKey = (string) Str::uuid();
+
+        if (! $design && $request->filled('group_from')) {
+            $source = Design::find($request->integer('group_from'));
+            $groupKey = $source && $source->isOwnedBy($request) ? $source->group_key : $groupKey;
+        }
+
+        $design = DB::transaction(function () use ($request, $design, $product, $colour, $prepared, $groupKey) {
             $design ??= new Design([
                 'product_id' => $product->id,
-                'group_key' => (string) Str::uuid(),
+                'group_key' => $groupKey,
                 'user_id' => $request->user()?->id,
                 'session_token' => $request->user() ? null : $request->session()->get('designer_token'),
             ]);
@@ -182,11 +191,32 @@ class DesignController extends Controller
             return $design;
         });
 
-        return response()->json(['design_id' => $design->id, 'next' => route('designs.show', $design)], $design->wasRecentlyCreated ? 201 : 200);
+        return response()->json(['design_id' => $design->id, 'next' => route('designs.order', $design)], $design->wasRecentlyCreated ? 201 : 200);
+    }
+
+    /**
+     * State of an existing design to start from ("use this design on another product").
+     *
+     * @return array{groupFrom: int, areas: array<string, array{state: string, widthCm: float, heightCm: float}>}|null
+     */
+    private function seedFrom(Request $request): ?array
+    {
+        $source = Design::with('areas.printArea')->find($request->query('from'));
+
+        if (! $source || ! $source->isOwnedBy($request)) {
+            return null;
+        }
+
+        return [
+            'groupFrom' => $source->id,
+            'areas' => $source->areas->mapWithKeys(fn ($a) => [$a->printArea->slug => ['state' => $a->state, 'widthCm' => $a->printArea->width_cm, 'heightCm' => $a->printArea->height_cm]])->all(),
+        ];
     }
 
     private function designer(Product $product, ?Design $design, Request $request): View
     {
+        $seed = $design ? null : $this->seedFrom($request);
+
         $product->load([
             'colours' => fn ($q) => $q->where('active', true),
             'colours.mockups',
@@ -223,6 +253,7 @@ class DesignController extends Controller
                 'personalisation' => $design?->areas->firstWhere('print_area_id', $a->id)?->personalisation,
             ])->values(),
             'assets' => $assets,
+            'seed' => $seed,
             'palette' => config('designer.palette'),
             'fonts' => config('designer.fonts'),
             'pxPerCm' => config('designer.px_per_cm'),

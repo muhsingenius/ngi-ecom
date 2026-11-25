@@ -8,30 +8,6 @@ use Illuminate\Testing\TestResponse;
 
 beforeEach(fn () => Storage::fake('designs'));
 
-function pngBytes(int $w = 200, int $h = 100): string
-{
-    $im = imagecreatetruecolor($w, $h);
-    imagesavealpha($im, true);
-    imagealphablending($im, false);
-    imagefill($im, 0, 0, imagecolorallocatealpha($im, 0, 0, 0, 127));
-    imagealphablending($im, true);
-    imagefilledrectangle($im, 10, 10, $w - 10, $h - 10, imagecolorallocate($im, 200, 30, 30));
-    ob_start();
-    imagepng($im);
-
-    return (string) ob_get_clean();
-}
-
-function jpegBytes(int $w = 120, int $h = 80): string
-{
-    $im = imagecreatetruecolor($w, $h);
-    imagefill($im, 0, 0, imagecolorallocate($im, 30, 90, 200));
-    ob_start();
-    imagejpeg($im);
-
-    return (string) ob_get_clean();
-}
-
 function upload(string $name, string $content): TestResponse
 {
     return test()->postJson('/design-assets', ['file' => UploadedFile::fake()->createWithContent($name, $content)]);

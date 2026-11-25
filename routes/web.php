@@ -3,9 +3,11 @@
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductPartsController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\CatalogueController;
 use App\Http\Controllers\DesignAssetController;
 use App\Http\Controllers\DesignController;
+use App\Http\Controllers\DesignOrderController;
 use App\Http\Controllers\PrivateFileController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +24,13 @@ Route::middleware('designer')->group(function () {
     Route::get('/designs/{design}/edit', [DesignController::class, 'edit'])->name('designs.edit');
     Route::post('/designs', [DesignController::class, 'store'])->middleware('throttle:designs')->name('designs.store');
     Route::put('/designs/{design}', [DesignController::class, 'update'])->middleware('throttle:designs')->name('designs.update');
+
+    Route::get('/designs/{design}/order', [DesignOrderController::class, 'show'])->name('designs.order');
+
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
+    Route::post('/cart/quote', [CartController::class, 'quote'])->middleware('throttle:120,1')->name('cart.quote');
+    Route::delete('/cart/{line}', [CartController::class, 'destroy'])->name('cart.destroy');
 
     Route::get('/design-assets/urls', [DesignAssetController::class, 'urls'])->name('design-assets.urls');
     Route::post('/design-assets', [DesignAssetController::class, 'store'])->middleware('throttle:uploads')->name('design-assets.store');

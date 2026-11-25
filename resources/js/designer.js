@@ -73,10 +73,13 @@ function designer() {
                 this.createCanvas(area);
             }
 
-            const saved = cfg.designId ? null : this.readAutosave();
+            // Reusing a design from another product starts from its artwork, scaled to this area.
+            const seed = ! cfg.designId && cfg.seed ? cfg.seed : null;
+            const saved = cfg.designId || seed ? null : this.readAutosave();
 
             for (const area of cfg.areas) {
-                const state = area.state ?? saved?.areas?.[area.id] ?? null;
+                const source = seed?.areas?.[area.slug];
+                const state = area.state ?? saved?.areas?.[area.id] ?? (source ? this.scaleState(source, area) : null);
 
                 if (state) {
                     await this.restore(canvases[area.id], state);
@@ -95,6 +98,22 @@ function designer() {
             }
 
             this.refresh();
+        },
+
+        /** Re-fit another product's artwork to this print area (same relative size and position). */
+        scaleState(source, area) {
+            const json = JSON.parse(source.state);
+            const ratio = area.widthCm / source.widthCm;
+
+            json.objects.forEach((o) => {
+                ['left', 'top', 'scaleX', 'scaleY'].forEach((k) => {
+                    if (typeof o[k] === 'number') {
+                        o[k] *= ratio;
+                    }
+                });
+            });
+
+            return json;
         },
 
         async loadFonts() {
@@ -814,6 +833,10 @@ function designer() {
                 form.append('product_id', cfg.productId);
                 form.append('colour_id', this.colourId);
                 form.append('name', this.designName);
+
+                if (cfg.seed && cfg.urls.method !== 'PUT') {
+                    form.append('group_from', cfg.seed.groupFrom);
+                }
 
                 if (cfg.urls.method === 'PUT') {
                     form.append('_method', 'PUT');

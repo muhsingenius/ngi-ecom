@@ -43,6 +43,9 @@
             <circle cx="12" cy="8.5" r="3.5" />
             <path d="M5 20c.8-3.6 3.5-5.5 7-5.5s6.2 1.9 7 5.5" />
             @break
+        @case('bag')
+            <path d="M5.5 8h13l-1 12h-11l-1-12Zm3.5 0V7a3 3 0 0 1 6 0v1" />
+            @break
         @case('menu')
             <path d="M4 7h16M4 12h16M4 17h16" />
             @break

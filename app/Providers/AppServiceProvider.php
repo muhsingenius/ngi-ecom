@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\CartLine;
 use App\Models\Design;
 use App\Models\DesignAsset;
 use Illuminate\Auth\Events\Login;
@@ -38,7 +39,7 @@ class AppServiceProvider extends ServiceProvider
                 return;
             }
 
-            foreach ([Design::class, DesignAsset::class] as $model) {
+            foreach ([Design::class, DesignAsset::class, CartLine::class] as $model) {
                 $model::query()->whereNull('user_id')->where('session_token', $token)
                     ->update(['user_id' => $event->user->getAuthIdentifier(), 'session_token' => null]);
             }
