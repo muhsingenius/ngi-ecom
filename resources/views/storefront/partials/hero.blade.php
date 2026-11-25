@@ -1,5 +1,5 @@
 <section class="section section-mist overflow-hidden">
-    <div class="container-page grid items-center gap-12 lg:grid-cols-[1.05fr_1fr] lg:gap-8">
+    <div class="container-page grid items-center gap-8 lg:grid-cols-[1.05fr_1fr] lg:gap-8">
         <div class="text-center lg:text-left">
             <span class="pill"><x-icon name="pencil" class="size-4" /> Made-to-order printing</span>
 
@@ -25,7 +25,7 @@
         </div>
 
         {{-- Photo with a tinted circle behind it, floating cards and a badge --}}
-        <div class="relative mx-auto w-full max-w-[26rem] lg:max-w-[28rem]">
+        <div class="relative order-first mx-auto w-full max-w-[26rem] lg:order-none lg:max-w-[28rem]">
             <div class="absolute -right-6 -top-6 size-[70%] rounded-full bg-brand-tint"></div>
             <div class="absolute -bottom-5 -left-5 size-[38%] rounded-full bg-accent-tint"></div>
 
@@ -33,7 +33,7 @@
                 <source type="image/webp" media="(max-width: 640px)" srcset="{{ asset('media/hero-560.webp') }}">
                 <img src="{{ asset('media/hero-1000.webp') }}" width="1000" height="1339" fetchpriority="high"
                      alt="A customer wearing a grey custom-printed T-shirt"
-                     class="relative aspect-[4/5] w-full rounded-[1.5rem] object-cover object-top shadow-float">
+                     class="relative aspect-[4/3] w-full rounded-[1.5rem] sm:aspect-[4/5] object-cover object-top shadow-float">
             </picture>
 
             <div class="float-card settle absolute -left-3 top-[22%] sm:-left-8" style="--settle-delay: .25s">
