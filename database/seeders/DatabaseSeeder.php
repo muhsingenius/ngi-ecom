@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         if (config('shop.seed.demo_catalogue')) {
-            $this->call(CatalogueSeeder::class);
+            $this->call([CatalogueSeeder::class, DeliverySeeder::class]);
         }
     }
 }

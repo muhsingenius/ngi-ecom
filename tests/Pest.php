@@ -1,8 +1,13 @@
 <?php
 
+use App\Models\Design;
+use App\Models\DesignArea;
+use App\Models\Product;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)
@@ -43,3 +48,40 @@ function userWithRole(string $role): User
 
     return tap(User::factory()->create())->assignRole($role);
 }
+
+/** A saved design owned by the current guest, without going through the browser export. */
+function savedDesign(Product $product, ?string $groupKey = null, array $roles = [], string $token = 'guest-token'): Design
+{
+    $design = Design::create([
+        'session_token' => $token, 'product_id' => $product->id, 'product_colour_id' => $product->colours->first()->id,
+        'group_key' => $groupKey ?? Str::uuid()->toString(),
+    ]);
+
+    $area = $product->printAreas->first();
+    $base = "designs/{$design->id}/area-{$area->id}";
+    Storage::disk('designs')->put("$base.png", pngBytes(100, 100));
+    Storage::disk('designs')->put("$base-preview.png", pngBytes(50, 50));
+
+    DesignArea::create([
+        'design_id' => $design->id, 'print_area_id' => $area->id, 'state' => '{"objects":[]}',
+        'personalisation' => $roles ?: null, 'export_path' => "$base.png", 'preview_path' => "$base-preview.png",
+        'export_width' => 100, 'export_height' => 100, 'export_dpi' => 300,
+    ]);
+
+    return $design->fresh();
+}
+
+function variantId(Product $product, string $colour, string $size): int
+{
+    return $product->variants->first(fn ($v) => $v->colour->name === $colour && $v->size === $size)->id;
+}
+
+function addToCart(Design $design, array $items, ?string $notes = null)
+{
+    return test()->post('/cart', ['design_id' => $design->id, 'items' => json_encode($items), 'notes' => $notes]);
+}
+
+const ROLES = [
+    'name' => ['x_cm' => 5, 'y_cm' => 2, 'width_cm' => 10, 'height_cm' => 3, 'font' => 'Anton', 'font_height_mm' => 30, 'fill' => '#ffffff', 'angle' => 0, 'sample' => 'NAME'],
+    'number' => ['x_cm' => 5, 'y_cm' => 8, 'width_cm' => 8, 'height_cm' => 10, 'font' => 'Anton', 'font_height_mm' => 90, 'fill' => '#ffffff', 'angle' => 0, 'sample' => '10'],
+];

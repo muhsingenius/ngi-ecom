@@ -1,13 +1,18 @@
 <?php
 
+use App\Http\Controllers\AccountController;
+use App\Http\Controllers\Admin\DeliveryController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductPartsController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CatalogueController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DesignAssetController;
 use App\Http\Controllers\DesignController;
 use App\Http\Controllers\DesignOrderController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PaystackWebhookController;
 use App\Http\Controllers\PrivateFileController;
 use Illuminate\Support\Facades\Route;
 
@@ -32,8 +37,23 @@ Route::middleware('designer')->group(function () {
     Route::post('/cart/quote', [CartController::class, 'quote'])->middleware('throttle:120,1')->name('cart.quote');
     Route::delete('/cart/{line}', [CartController::class, 'destroy'])->name('cart.destroy');
 
+    Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
+    Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:10,1')->name('checkout.store');
+
     Route::get('/design-assets/urls', [DesignAssetController::class, 'urls'])->name('design-assets.urls');
     Route::post('/design-assets', [DesignAssetController::class, 'store'])->middleware('throttle:uploads')->name('design-assets.store');
+});
+
+// Customer order pages (secret link for guests, or the signed-in owner) and the Paystack webhook.
+Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+Route::get('/orders/{order}/status', [OrderController::class, 'status'])->name('orders.status');
+Route::post('/orders/{order}/pay', [OrderController::class, 'pay'])->middleware('throttle:10,1')->name('orders.pay');
+Route::post('/webhooks/paystack', PaystackWebhookController::class)->name('webhooks.paystack');
+
+Route::middleware('auth')->prefix('account')->group(function () {
+    Route::get('orders', [AccountController::class, 'orders'])->name('account.orders');
+    Route::get('designs', [AccountController::class, 'designs'])->name('account.designs');
+    Route::delete('designs/{design}', [AccountController::class, 'destroyDesign'])->name('account.designs.destroy');
 });
 
 // Admin area: guests -> login, signed-in users without the role -> 403.
@@ -44,6 +64,16 @@ Route::middleware(['auth', 'role:admin', 'verified'])
 
         Route::get('settings', [SettingsController::class, 'edit'])->name('admin.settings.edit');
         Route::put('settings', [SettingsController::class, 'update'])->name('admin.settings.update');
+
+        Route::controller(DeliveryController::class)->prefix('delivery')->group(function () {
+            Route::get('/', 'index')->name('admin.delivery.index');
+            Route::post('zones', 'storeZone')->name('admin.delivery.zones.store');
+            Route::put('zones/{zone}', 'updateZone')->name('admin.delivery.zones.update');
+            Route::delete('zones/{zone}', 'destroyZone')->name('admin.delivery.zones.destroy');
+            Route::post('pickups', 'storePickup')->name('admin.delivery.pickups.store');
+            Route::put('pickups/{pickup}', 'updatePickup')->name('admin.delivery.pickups.update');
+            Route::delete('pickups/{pickup}', 'destroyPickup')->name('admin.delivery.pickups.destroy');
+        });
 
         Route::resource('products', AdminProductController::class)->except('show')->names('admin.products');
 

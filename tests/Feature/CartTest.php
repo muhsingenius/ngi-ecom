@@ -2,13 +2,11 @@
 
 use App\Models\CartLine;
 use App\Models\Design;
-use App\Models\DesignArea;
 use App\Models\Product;
 use App\Services\Settings;
 use Database\Seeders\CatalogueSeeder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 beforeEach(function () {
     Storage::fake('public');
@@ -17,38 +15,6 @@ beforeEach(function () {
     $this->withSession(['designer_token' => 'guest-token']);
     $this->tee = Product::with(['variants', 'colours', 'printAreas'])->where('slug', 'classic-t-shirt-standard')->first();
 });
-
-/** A saved design owned by the current guest, without going through the browser export. */
-function savedDesign(Product $product, ?string $groupKey = null, array $roles = [], string $token = 'guest-token'): Design
-{
-    $design = Design::create([
-        'session_token' => $token, 'product_id' => $product->id, 'product_colour_id' => $product->colours->first()->id,
-        'group_key' => $groupKey ?? Str::uuid()->toString(),
-    ]);
-
-    $area = $product->printAreas->first();
-    DesignArea::create([
-        'design_id' => $design->id, 'print_area_id' => $area->id, 'state' => '{"objects":[]}',
-        'personalisation' => $roles ?: null, 'export_width' => 100, 'export_height' => 100, 'export_dpi' => 300,
-    ]);
-
-    return $design->fresh();
-}
-
-function variantId(Product $product, string $colour, string $size): int
-{
-    return $product->variants->first(fn ($v) => $v->colour->name === $colour && $v->size === $size)->id;
-}
-
-function addToCart(Design $design, array $items, ?string $notes = null)
-{
-    return test()->post('/cart', ['design_id' => $design->id, 'items' => json_encode($items), 'notes' => $notes]);
-}
-
-const ROLES = [
-    'name' => ['x_cm' => 5, 'y_cm' => 2, 'width_cm' => 10, 'height_cm' => 3, 'font' => 'Anton', 'font_height_mm' => 30, 'fill' => '#ffffff', 'angle' => 0, 'sample' => 'NAME'],
-    'number' => ['x_cm' => 5, 'y_cm' => 8, 'width_cm' => 8, 'height_cm' => 10, 'font' => 'Anton', 'font_height_mm' => 90, 'fill' => '#ffffff', 'angle' => 0, 'sample' => '10'],
-];
 
 it('shows the options page to the owner only', function () {
     $design = savedDesign($this->tee);

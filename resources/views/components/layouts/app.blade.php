@@ -40,7 +40,9 @@
 
                 <div class="ml-auto flex items-center gap-5">
                     @auth
-                        <span class="inline-flex items-center gap-2"><x-icon name="user" class="size-4" /> {{ $user->name }}</span>
+                        <span class="hidden items-center gap-2 sm:inline-flex"><x-icon name="user" class="size-4" /> {{ $user->name }}</span>
+                        <a href="{{ route('account.orders') }}" class="hover:text-white">My orders</a>
+                        <a href="{{ route('account.designs') }}" class="hover:text-white">My designs</a>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button class="hover:text-white">Log out</button>

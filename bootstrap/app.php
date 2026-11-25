@@ -23,6 +23,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'designer' => EnsureDesignerToken::class,
         ]);
 
+        // Paystack calls this server-to-server; it is authenticated by its HMAC signature instead of a CSRF token.
+        $middleware->validateCsrfTokens(except: ['webhooks/paystack']);
+
         // Signed-in users who hit guest-only pages (login, register) are sent to their own area.
         $middleware->redirectUsersTo(fn (Request $request) => $request->user()?->homePath() ?? '/');
     })
