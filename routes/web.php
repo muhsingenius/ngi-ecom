@@ -4,6 +4,8 @@ use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductPartsController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\CatalogueController;
+use App\Http\Controllers\DesignAssetController;
+use App\Http\Controllers\DesignController;
 use App\Http\Controllers\PrivateFileController;
 use Illuminate\Support\Facades\Route;
 
@@ -12,6 +14,18 @@ Route::view('/', 'storefront.home')->name('home');
 // Public catalogue.
 Route::get('/products', [CatalogueController::class, 'index'])->name('catalogue.index');
 Route::get('/products/{product:slug}', [CatalogueController::class, 'show'])->name('catalogue.show');
+
+// Designer. Guests own their work through a session token (see EnsureDesignerToken).
+Route::middleware('designer')->group(function () {
+    Route::get('/products/{product:slug}/design', [DesignController::class, 'create'])->name('designs.create');
+    Route::get('/designs/{design}', [DesignController::class, 'show'])->name('designs.show');
+    Route::get('/designs/{design}/edit', [DesignController::class, 'edit'])->name('designs.edit');
+    Route::post('/designs', [DesignController::class, 'store'])->middleware('throttle:designs')->name('designs.store');
+    Route::put('/designs/{design}', [DesignController::class, 'update'])->middleware('throttle:designs')->name('designs.update');
+
+    Route::get('/design-assets/urls', [DesignAssetController::class, 'urls'])->name('design-assets.urls');
+    Route::post('/design-assets', [DesignAssetController::class, 'store'])->middleware('throttle:uploads')->name('design-assets.store');
+});
 
 // Admin area: guests -> login, signed-in users without the role -> 403.
 Route::middleware(['auth', 'role:admin', 'verified'])

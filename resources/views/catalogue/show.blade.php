@@ -88,6 +88,10 @@
                     </p>
                 </div>
 
+                <a x-bind:href="`{{ route('designs.create', $product) }}?colour=${colours[colour]?.id ?? ''}`" class="btn btn-brand btn-lg btn-block mt-5">
+                    <x-icon name="pencil" class="size-4" /> Start designing
+                </a>
+
                 {{-- Tier table --}}
                 <div class="mt-6">
                     <h2 class="type-heading">Bulk prices</h2>
