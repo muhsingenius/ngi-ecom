@@ -8,12 +8,14 @@ use App\Mail\OrderUpdateMail;
 use App\Models\CartLine;
 use App\Models\DeliveryZone;
 use App\Models\Order;
+use App\Models\Payment;
 use App\Models\PickupPoint;
 use App\Support\Money;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 /**
  * Order lifecycle: placing an order from the cart, recording payment, and releasing
@@ -208,6 +210,72 @@ class OrderService
 
             $this->notify($order, 'Your order is ready', 'Your order is ready.', [$where]);
         }
+    }
+
+    /**
+     * Admin: send a ready delivery order out. The courier, rider phone and note are emailed to the customer.
+     */
+    public function dispatch(Order $order, ?string $courier, ?string $riderPhone, ?string $note, ?int $userId = null): void
+    {
+        abort_unless($order->isDelivery() && $order->status === OrderStatus::Ready, 422);
+
+        $order->forceFill([
+            'status' => OrderStatus::Dispatched, 'dispatched_at' => now(),
+            'courier' => $courier ?: null, 'rider_phone' => $riderPhone ?: null, 'tracking_note' => $note ?: null,
+        ])->save();
+
+        $order->record('dispatched', 'Dispatched'.($courier ? " with {$courier}" : '').'.', $userId);
+
+        $lines = ['Your order is on its way to '.$order->zone_name.'.'];
+
+        if ($courier) {
+            $lines[] = "Courier: {$courier}";
+        }
+
+        if ($riderPhone) {
+            $lines[] = "Rider phone: {$riderPhone}";
+        }
+
+        if ($note) {
+            $lines[] = $note;
+        }
+
+        if ($order->zone_eta) {
+            $lines[] = "Expected delivery time: {$order->zone_eta}.";
+        }
+
+        $this->notify($order, 'Your order has been dispatched', 'Your order is on its way.', $lines);
+    }
+
+    /** Admin: the customer collected a ready pickup order. */
+    public function markPickedUp(Order $order, ?int $userId = null): void
+    {
+        abort_unless(! $order->isDelivery() && $order->status === OrderStatus::Ready, 422);
+
+        $order->forceFill(['status' => OrderStatus::PickedUp])->save();
+        $order->record('picked_up', 'Picked up by the customer.', $userId);
+    }
+
+    public function complete(Order $order, ?int $userId = null): void
+    {
+        abort_unless(in_array($order->status, [OrderStatus::Dispatched, OrderStatus::PickedUp], true), 422);
+
+        $order->forceFill(['status' => OrderStatus::Completed, 'completed_at' => now()])->save();
+        $order->record('completed', 'Order completed.', $userId);
+    }
+
+    /** Admin: payment arrived by another route (bank transfer, cash at the shop). */
+    public function recordManualPayment(Order $order, string $note, ?int $userId = null): void
+    {
+        abort_if($order->isPaid() || $order->cancelled_at, 422);
+
+        Payment::create([
+            'order_id' => $order->id, 'reference' => 'MANUAL-'.$order->number.'-'.Str::upper(Str::random(6)), 'amount' => $order->total,
+            'currency' => $order->currency, 'channel' => 'manual', 'status' => 'success', 'payload' => ['note' => $note], 'paid_at' => now(),
+        ]);
+
+        $order->record('manual_payment', "Payment recorded manually: {$note}", $userId);
+        $this->markPaid($order);
     }
 
     /** Cancel an order and tell the customer. Refunding any payment is a separate admin action. */

@@ -62,6 +62,11 @@ class Order extends Model
         return $this->hasMany(OrderEvent::class)->orderBy('created_at')->orderBy('id');
     }
 
+    public function refunds(): HasMany
+    {
+        return $this->hasMany(Refund::class)->orderBy('id');
+    }
+
     public function proofs(): HasMany
     {
         return $this->hasMany(Proof::class)->orderBy('version');

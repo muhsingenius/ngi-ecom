@@ -3,6 +3,7 @@
 use App\Models\DeliveryZone;
 use App\Models\Design;
 use App\Models\DesignArea;
+use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\User;
@@ -151,4 +152,29 @@ function payload(Product $product, $area, string $state, array $override = [], ?
             'export' => UploadedFile::fake()->createWithContent('print.png', $png ?? pngBytes($w, $h)),
         ]],
     ], $override);
+}
+
+/** A paid order released to the print shop. */
+function releasedOrder(int $qty = 3, array $checkout = [], array $roles = []): Order
+{
+    cartWith($qty, 'M', roles: $roles);
+    test()->post('/checkout', checkoutData($checkout));
+    $order = Order::latest('id')->first();
+    webhook(chargeSuccess(Payment::where('order_id', $order->id)->first()))->assertOk();
+
+    return $order->fresh();
+}
+
+/** Place a large (proof-requiring) order and return it. */
+function proofOrder(int $qty = 25, string $slug = 'classic-t-shirt-standard', array $roles = []): Order
+{
+    cartWith($qty, 'M', $slug, $roles);
+    test()->post('/checkout', checkoutData());
+
+    return Order::latest('id')->first();
+}
+
+function pay(Order $order): void
+{
+    webhook(chargeSuccess(Payment::where('order_id', $order->id)->latest('id')->first()))->assertOk();
 }

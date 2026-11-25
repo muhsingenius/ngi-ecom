@@ -1,9 +1,12 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DeliveryController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductPartsController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CatalogueController;
@@ -68,7 +71,27 @@ Route::middleware('auth')->prefix('account')->group(function () {
 Route::middleware(['auth', 'role:admin', 'verified'])
     ->prefix('admin')
     ->group(function () {
-        Route::view('/', 'admin.dashboard')->name('admin.dashboard');
+        Route::get('/', DashboardController::class)->name('admin.dashboard');
+        Route::get('reports', ReportController::class)->name('admin.reports');
+
+        Route::controller(AdminOrderController::class)->prefix('orders')->group(function () {
+            Route::get('/', 'index')->name('admin.orders.index');
+            Route::get('{order}', 'show')->name('admin.orders.show');
+            Route::post('{order}/dispatch', 'dispatch')->name('admin.orders.dispatch');
+            Route::post('{order}/picked-up', 'pickedUp')->name('admin.orders.picked-up');
+            Route::post('{order}/complete', 'complete')->name('admin.orders.complete');
+            Route::post('{order}/cancel', 'cancel')->name('admin.orders.cancel');
+            Route::post('{order}/mark-paid', 'markPaid')->name('admin.orders.mark-paid');
+            Route::post('{order}/verify', 'verify')->name('admin.orders.verify');
+            Route::post('{order}/refund', 'refund')->name('admin.orders.refund');
+            Route::post('{order}/proof/replace', 'replaceProof')->name('admin.orders.proof.replace');
+            Route::post('{order}/proof/resend', 'resendProof')->name('admin.orders.proof.resend');
+            Route::post('{order}/proof/timing', 'proofTiming')->name('admin.orders.proof.timing');
+            Route::post('{order}/lines/{line}/revise', 'reviseDesign')->name('admin.orders.revise');
+            Route::post('{order}/clear-flag', 'clearFlag')->name('admin.orders.clear-flag');
+            Route::get('{order}/sheet', 'sheet')->name('admin.orders.sheet');
+            Route::get('{order}/files', 'files')->name('admin.orders.files');
+        });
 
         Route::get('settings', [SettingsController::class, 'edit'])->name('admin.settings.edit');
         Route::put('settings', [SettingsController::class, 'update'])->name('admin.settings.update');

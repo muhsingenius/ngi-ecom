@@ -33,20 +33,6 @@ beforeEach(function () {
     app(Settings::class)->set('shop.notification_email', 'print@example.test');
 });
 
-/** Place a large (proof-requiring) order and return it. */
-function proofOrder(int $qty = 25, string $slug = 'classic-t-shirt-standard', array $roles = []): Order
-{
-    cartWith($qty, 'M', $slug, $roles);
-    test()->post('/checkout', checkoutData());
-
-    return Order::latest('id')->first();
-}
-
-function pay(Order $order): void
-{
-    webhook(chargeSuccess(Payment::where('order_id', $order->id)->latest('id')->first()))->assertOk();
-}
-
 describe('pay then proof', function () {
     it('generates and emails a proof after payment, and holds the order back', function () {
         $order = proofOrder();

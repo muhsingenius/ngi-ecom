@@ -27,17 +27,6 @@ beforeEach(function () {
     $this->pickup = PickupPoint::create(['name' => 'Our shop', 'address' => '1 Main Street', 'hours' => '9-6']);
 });
 
-/** A paid order released to the print shop. */
-function releasedOrder(int $qty = 3, array $checkout = [], array $roles = []): Order
-{
-    cartWith($qty, 'M', roles: $roles);
-    test()->post('/checkout', checkoutData($checkout));
-    $order = Order::latest('id')->first();
-    webhook(chargeSuccess(Payment::where('order_id', $order->id)->first()))->assertOk();
-
-    return $order->fresh();
-}
-
 describe('access', function () {
     it('is for the print shop role only', function () {
         $this->get('/shop')->assertRedirect(route('login'));

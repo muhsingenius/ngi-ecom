@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Services\OrderService;
 use App\Services\Paystack;
+use App\Services\RefundService;
 use App\Support\Money;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -25,8 +26,14 @@ class PaystackWebhookController extends Controller
 
         $event = json_decode($payload, true) ?: [];
 
-        if (($event['event'] ?? null) === 'charge.success') {
+        $type = $event['event'] ?? null;
+
+        if ($type === 'charge.success') {
             self::confirm((array) ($event['data'] ?? []), $orders);
+        }
+
+        if (in_array($type, ['refund.processed', 'refund.failed'], true)) {
+            app(RefundService::class)->applyWebhook($type, (array) ($event['data'] ?? []));
         }
 
         return response('ok');
