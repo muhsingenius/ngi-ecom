@@ -24,7 +24,7 @@
                 @endforeach
             </ul>
 
-            <a href="#how-it-works" class="btn btn-brand btn-lg mt-8">See how ordering works <x-icon name="arrow" class="size-4" /></a>
+            <a href="{{ route('catalogue.index') }}" class="btn btn-brand btn-lg mt-8">Start designing <x-icon name="arrow" class="size-4" /></a>
         </div>
 
         {{-- Demo video, played at 1.5x --}}

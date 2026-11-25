@@ -1,9 +1,14 @@
 <?php
 
+use App\Http\Controllers\CatalogueController;
 use App\Http\Controllers\PrivateFileController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'storefront.home')->name('home');
+
+// Public catalogue.
+Route::get('/products', [CatalogueController::class, 'index'])->name('catalogue.index');
+Route::get('/products/{product:slug}', [CatalogueController::class, 'show'])->name('catalogue.show');
 
 // Admin area: guests -> login, signed-in users without the role -> 403.
 Route::middleware(['auth', 'role:admin', 'verified'])

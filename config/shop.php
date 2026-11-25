@@ -29,6 +29,8 @@ return [
         'admin_password' => env('SEED_ADMIN_PASSWORD'),
         'shop_email' => env('SEED_SHOP_EMAIL'),
         'shop_password' => env('SEED_SHOP_PASSWORD'),
+        // A small demo catalogue; on by default everywhere except production.
+        'demo_catalogue' => (bool) env('SEED_DEMO_CATALOGUE', env('APP_ENV') !== 'production'),
     ],
 
 ];

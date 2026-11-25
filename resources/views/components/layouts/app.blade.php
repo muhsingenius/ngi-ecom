@@ -15,7 +15,7 @@
             $user = auth()->user();
             $links = [
                 ['Home', route('home'), request()->routeIs('home')],
-                ['Products', route('home').'#products', false],
+                ['Products', route('catalogue.index'), request()->routeIs('catalogue.*')],
                 ['How it works', route('home').'#how-it-works', false],
             ];
 
@@ -71,7 +71,7 @@
                 </nav>
 
                 <div class="flex items-center gap-3">
-                    <a href="{{ route('home') }}#how-it-works" class="btn btn-brand hidden sm:inline-flex">
+                    <a href="{{ route('catalogue.index') }}" class="btn btn-brand hidden sm:inline-flex">
                         <x-icon name="pencil" class="size-4" /> Design your own
                     </a>
 
@@ -91,7 +91,7 @@
                         </li>
                     @endforeach
                     <li class="py-3">
-                        <a href="{{ route('home') }}#how-it-works" x-on:click="open = false" class="btn btn-brand btn-block"><x-icon name="pencil" class="size-4" /> Design your own</a>
+                        <a href="{{ route('catalogue.index') }}" x-on:click="open = false" class="btn btn-brand btn-block"><x-icon name="pencil" class="size-4" /> Design your own</a>
                     </li>
                 </ul>
             </nav>
@@ -121,7 +121,7 @@
                 <div>
                     <p class="font-bold text-white">Shop</p>
                     <ul class="mt-4 space-y-3">
-                        <li><a href="{{ route('home') }}#products" class="hover:text-white">Products</a></li>
+                        <li><a href="{{ route('catalogue.index') }}" class="hover:text-white">Products</a></li>
                         <li><a href="{{ route('home') }}#how-it-works" class="hover:text-white">How it works</a></li>
                     </ul>
                 </div>

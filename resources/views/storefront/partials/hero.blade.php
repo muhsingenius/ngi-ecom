@@ -10,7 +10,7 @@
             </p>
 
             <div class="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center sm:gap-6 lg:justify-start">
-                <a href="#design" class="btn btn-brand btn-lg"><x-icon name="pencil" class="size-4" /> Design your own</a>
+                <a href="{{ route('catalogue.index') }}" class="btn btn-brand btn-lg"><x-icon name="pencil" class="size-4" /> Design your own</a>
                 <a href="#products" class="link-arrow justify-center">Browse products <x-icon name="arrow" class="size-4" /></a>
             </div>
 

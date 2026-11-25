@@ -13,5 +13,9 @@ class DatabaseSeeder extends Seeder
             SettingsSeeder::class,
             StaffUserSeeder::class,
         ]);
+
+        if (config('shop.seed.demo_catalogue')) {
+            $this->call(CatalogueSeeder::class);
+        }
     }
 }
