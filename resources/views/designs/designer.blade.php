@@ -53,6 +53,10 @@
                             <div data-box x-show="areaId === {{ $a['id'] }}" class="absolute outline outline-1 outline-dashed outline-brand/50"
                                  style="left: {{ $a['box']['x'] }}%; top: {{ $a['box']['y'] }}%; width: {{ $a['box']['w'] }}%; aspect-ratio: {{ $a['widthCm'] }} / {{ $a['heightCm'] }};">
                                 <canvas id="canvas-{{ $a['id'] }}"></canvas>
+                                @if ($a['zones'])
+                                    <div class="pointer-events-none absolute inset-x-0 top-1/3 z-10 border-t border-dashed border-brand/30"></div>
+                                    <div class="pointer-events-none absolute inset-x-0 top-2/3 z-10 border-t border-dashed border-brand/30"></div>
+                                @endif
                             </div>
                         @endforeach
                     </div>
@@ -86,6 +90,16 @@
                                 <button type="button" class="btn btn-outline" x-on:click="addText()"><x-icon name="type" class="size-4" /> Add text</button>
                                 <template x-if="area.allowsName"><button type="button" class="btn btn-outline" x-on:click="addRole('name')">Add name</button></template>
                                 <template x-if="area.allowsNumber"><button type="button" class="btn btn-outline" x-on:click="addRole('number')">Add number</button></template>
+                            </div>
+                            <div class="mt-4" x-show="area.zones" x-cloak>
+                                <p class="text-sm font-semibold text-ink">Place on the <span x-text="area.slug.includes('back') ? 'back' : 'front'"></span></p>
+                                <div class="mt-2 grid grid-cols-3 gap-2" role="group" aria-label="Placement">
+                                    <template x-for="z in (area.zones ?? [])" :key="z.key">
+                                        <button type="button" class="btn !min-h-10 !px-2 text-sm" x-text="z.label" x-on:click="placeIn(z.key)"
+                                                x-bind:aria-pressed="zone === z.key" x-bind:class="zone === z.key ? 'btn-brand' : 'btn-outline'"></button>
+                                    </template>
+                                </div>
+                                <p class="mt-2 text-xs text-muted">Moves the selected item, and sets where new text and images appear. You can still drag it anywhere.</p>
                             </div>
                             <div class="mt-3 flex gap-2">
                                 <button type="button" class="btn btn-outline !min-h-10 flex-1" x-on:click="undo()" x-bind:disabled="! canUndo">Undo</button>

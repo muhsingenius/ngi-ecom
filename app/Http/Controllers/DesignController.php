@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PrintMethod;
 use App\Models\Design;
 use App\Models\DesignArea;
 use App\Models\DesignAsset;
 use App\Models\OrderLine;
+use App\Models\PrintArea;
 use App\Models\Product;
 use App\Models\ProductColour;
 use App\Services\DesignRules;
@@ -227,6 +229,23 @@ class DesignController extends Controller
         ];
     }
 
+    /**
+     * Where on a large print area (front or back of a garment) the customer can place their artwork.
+     * Small areas such as sleeves and chest badges have none.
+     *
+     * @return list<array{key: string, label: string}>|null
+     */
+    private function placementZones(PrintArea $area): ?array
+    {
+        if ($area->height_cm < 20 || $area->method === PrintMethod::Engraving) {
+            return null;
+        }
+
+        return str_contains($area->slug, 'back')
+            ? [['key' => 'top', 'label' => 'Upper back'], ['key' => 'middle', 'label' => 'Middle'], ['key' => 'bottom', 'label' => 'Lower back']]
+            : [['key' => 'top', 'label' => 'Chest'], ['key' => 'middle', 'label' => 'Middle'], ['key' => 'bottom', 'label' => 'Bottom']];
+    }
+
     private function designer(Product $product, ?Design $design, Request $request): View
     {
         $seed = $design ? null : $this->seedFrom($request);
@@ -261,6 +280,7 @@ class DesignController extends Controller
                 'method' => $a->method->value, 'methodLabel' => $a->method->label(),
                 'maxColours' => $a->max_colours, 'minLineMm' => $a->min_line_mm, 'maxChars' => $a->max_chars,
                 'allowsName' => $a->allows_name, 'allowsNumber' => $a->allows_number,
+                'zones' => $this->placementZones($a),
                 'box' => ['x' => (float) $a->box_x, 'y' => (float) $a->box_y, 'w' => (float) $a->box_w, 'h' => (float) $a->box_h],
                 'mockups' => $a->mockups()->get()->mapWithKeys(fn ($m) => [$m->product_colour_id => $m->url()]),
                 'state' => $design?->areas->firstWhere('print_area_id', $a->id)?->state,

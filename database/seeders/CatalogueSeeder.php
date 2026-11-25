@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Enums\PrintMethod;
 use App\Enums\ProductType;
 use App\Models\Product;
+use App\Support\DemoPhotos;
 use App\Support\MockupGenerator;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
@@ -73,6 +74,8 @@ class CatalogueSeeder extends Seeder
             [1 => 25, 10 => 21, 25 => 18, 50 => 15], ['One size' => 0], ['Black' => '#111827', 'Silver' => '#C0C4CC'], [
                 ['Band', 'band', 18, 1.2, PrintMethod::Engraving, 0, ['box' => [12, 43, 76, 14], 'chars' => 30]],
             ], tierScope: 'product_design');
+
+        DemoPhotos::apply();
     }
 
     /**

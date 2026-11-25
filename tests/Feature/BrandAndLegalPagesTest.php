@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\PageController;
 use App\Models\Order;
+use App\Services\Settings;
 
 it('is branded PRINTABLE', function () {
     expect(config('app.name'))->toBe('PRINTABLE');
@@ -52,15 +54,15 @@ describe('legal pages', function () {
     it('point to the contact page until the store adds its own details', function () {
         $this->get('/privacy')->assertSee(route('contact'));
 
-        app(App\Services\Settings::class)->set('store.email', 'privacy@example.test');
-        app(App\Services\Settings::class)->set('store.phone', '024 111 2222');
+        app(Settings::class)->set('store.email', 'privacy@example.test');
+        app(Settings::class)->set('store.phone', '024 111 2222');
 
         $this->get('/privacy')->assertSee('mailto:privacy@example.test', false)->assertSee('tel:0241112222', false);
         $this->get('/data-protection')->assertSee('privacy@example.test');
     });
 
     it('show the date they were last updated', function () {
-        $this->get('/privacy')->assertSee('Last updated '.App\Http\Controllers\PageController::LEGAL_UPDATED);
+        $this->get('/privacy')->assertSee('Last updated '.PageController::LEGAL_UPDATED);
     });
 
     it('are linked from the register and checkout forms', function () {

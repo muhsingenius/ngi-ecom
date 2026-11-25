@@ -63,7 +63,7 @@ Products and all their parts, delivery zones and pickup points, settings (every 
 * **Proof image** shows artwork on mockups; names and numbers are listed for checking on the proof page rather than drawn into the image.
 * **Fonts** load from `fonts.bunny.net` in the customer's browser. Self-hosting them is a later option.
 * **Landing page** product photos for mugs, tote bags and stickers are illustrative: they are not sellable products in this version.
-* Placeholder mockups are generated flat silhouettes; upload real photos per colour and area in the admin.
+* Tee and polo fronts use the supplied product photos, recoloured per colour (`PhotoMockup`); backs, hoodie and cap use generated silhouettes. Upload real photos per colour and area in the admin to replace any of them.
 * The Paystack integration has been exercised against faked responses only. Run a full test-mode order on the live host before taking real payments.
 * Refund webhook event names (`refund.processed`, `refund.failed`) follow Paystack's documentation; confirm them in test mode.
 * Not yet verified on a real cPanel host: PHP and MySQL versions, extensions, upload limits and the cron schedule.

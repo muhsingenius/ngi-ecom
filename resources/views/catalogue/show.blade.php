@@ -6,7 +6,8 @@
     $firstColour = $product->colours->first();
     $firstArea = $product->printAreas->first();
     $mockupFor = fn ($colour) => $colour?->mockups->firstWhere('print_area_id', $firstArea?->id)?->url() ?? $product->imageUrl();
-    $colourData = $product->colours->map(fn ($c) => ['id' => $c->id, 'name' => $c->name, 'hex' => $c->hex, 'image' => $mockupFor($c)])->values();
+    $hasPhoto = str_starts_with((string) $product->image, 'media/');
+    $colourData =$product->colours->map(fn ($c) => ['id' => $c->id, 'name' => $c->name, 'hex' => $c->hex, 'image' => $mockupFor($c)])->values();
 @endphp
 
 <x-layouts.app :title="$product->name">
@@ -16,6 +17,8 @@
                 tiers: @js($tiersJson),
                 colours: @js($colourData),
                 colour: 0,
+                photo: @js($hasPhoto),
+                photoUrl: @js($product->imageUrl()),
                 qty: 1,
                 symbol: @js($symbol),
                 get tier() { let t = this.tiers[0]; for (const x of this.tiers) { if (x.min <= Math.max(this.qty, 1)) t = x; } return t; },
@@ -30,15 +33,19 @@
             {{-- Mockup and colour picker --}}
             <div>
                 <div class="overflow-hidden rounded-card bg-mist">
-                    <img x-bind:src="colours[colour]?.image ?? @js($product->imageUrl())" alt="{{ $product->name }}" class="aspect-[4/5] w-full object-contain p-6">
+                    <img x-bind:src="photo ? photoUrl : (colours[colour]?.image ?? photoUrl)" alt="{{ $product->name }}" class="aspect-[4/5] w-full object-contain p-6">
                 </div>
+
+                @if ($hasPhoto)
+                    <button type="button" class="mt-3 text-sm font-semibold text-brand-strong underline" x-show="! photo" x-cloak x-on:click="photo = true">Show product photo</button>
+                @endif
 
                 @if ($product->colours->count() > 1)
                     <div class="mt-5">
                         <p class="text-sm font-semibold text-ink">Colour: <span class="font-normal text-copy" x-text="colours[colour]?.name"></span></p>
                         <div class="mt-3 flex flex-wrap gap-3">
                             @foreach ($product->colours as $i => $c)
-                                <button type="button" x-on:click="colour = {{ $i }}" title="{{ $c->name }}" aria-label="{{ $c->name }}"
+                                <button type="button" x-on:click="colour = {{ $i }}; photo = false" title="{{ $c->name }}" aria-label="{{ $c->name }}"
                                         class="size-9 rounded-full border border-line ring-offset-2"
                                         x-bind:class="colour === {{ $i }} ? 'ring-2 ring-brand' : ''" style="background: {{ $c->hex }}"></button>
                             @endforeach

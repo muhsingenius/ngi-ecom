@@ -36,6 +36,7 @@ function designer() {
         cfg,
         colourId: cfg.colourId,
         areaId: cfg.areas[0].id,
+        zone: 'middle',
         selection: null,
         warnings: [],
         colourCounts: {},
@@ -442,6 +443,31 @@ function designer() {
             this.changed(canvases[this.areaId]);
         },
 
+        // Placement: front and back have chest/middle/bottom bands the artwork can be moved to.
+        zoneCentre(canvas, zone = this.zone) {
+            return canvas.height * ({ top: 1 / 6, middle: 1 / 2, bottom: 5 / 6 }[zone] ?? 1 / 2);
+        },
+
+        placeIn(zone) {
+            this.zone = zone;
+            const canvas = canvases[this.areaId];
+            const o = this.selectedObject();
+
+            if (!o) {
+                return;
+            }
+
+            o.setCoords();
+            const box = o.getBoundingRect();
+            const half = box.height / 2;
+            const target = Math.min(Math.max(this.zoneCentre(canvas, zone), half), Math.max(canvas.height - half, half));
+
+            o.set({ top: o.top + (target - (box.top + half)) });
+            o.setCoords();
+            canvas.requestRenderAll();
+            this.changed(canvas);
+        },
+
         centre() {
             const o = this.selectedObject();
 
@@ -503,7 +529,7 @@ function designer() {
             const limit = this.area.method === 'engraving' ? this.area.maxChars : null;
             const obj = new IText(limit ? text.slice(0, limit) : text, {
                 left: canvas.width / 2,
-                top: canvas.height / 2,
+                top: this.area.zones ? this.zoneCentre(canvas) : canvas.height / 2,
                 originX: 'center',
                 originY: 'center',
                 fontFamily: font,
@@ -592,7 +618,9 @@ function designer() {
             }
 
             const fit = Math.min((canvas.width * 0.6) / obj.width, (canvas.height * 0.6) / obj.height);
-            obj.set({ scaleX: fit, scaleY: fit, left: canvas.width / 2, top: canvas.height / 2, originX: 'center', originY: 'center' });
+            const half = (obj.height * fit) / 2;
+            const top = this.area.zones ? Math.min(Math.max(this.zoneCentre(canvas), half), Math.max(canvas.height - half, half)) : canvas.height / 2;
+            obj.set({ scaleX: fit, scaleY: fit, left: canvas.width / 2, top, originX: 'center', originY: 'center' });
             obj.assetId = asset.id;
 
             canvas.add(obj);
@@ -646,6 +674,7 @@ function designer() {
             canvases[this.areaId]?.discardActiveObject();
             canvases[this.areaId]?.requestRenderAll();
             this.areaId = id;
+            this.zone = 'middle';
             this.selection = null;
             this.syncUndo();
             this.refresh();
