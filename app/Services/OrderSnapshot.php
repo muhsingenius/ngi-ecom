@@ -51,13 +51,14 @@ class OrderSnapshot
                 'box_x' => $print->box_x, 'box_y' => $print->box_y, 'box_w' => $print->box_w, 'box_h' => $print->box_h,
                 'export_width' => $area->export_width, 'export_height' => $area->export_height, 'export_dpi' => $area->export_dpi,
                 'personalisation' => $area->personalisation,
+                'state' => $area->state,
                 'assets' => $this->assets($order, $line, $area->state),
             ]);
         }
     }
 
     /**
-     * @return list<array{name: string, path: string}>
+     * @return list<array{id: int, name: string, path: string, mime: string, kind: string, width: int|null, height: int|null}>
      */
     private function assets(Order $order, OrderLine $line, ?string $state): array
     {
@@ -71,7 +72,7 @@ class OrderSnapshot
 
             $target = "orders/{$order->id}/line-{$line->id}/originals/{$asset->id}-".preg_replace('/[^\w.\-]/', '_', (string) $asset->original_name);
             Storage::disk('designs')->copy($asset->path, $target);
-            $copied[] = ['name' => (string) $asset->original_name, 'path' => $target];
+            $copied[] = ['id' => $asset->id, 'name' => (string) $asset->original_name, 'path' => $target, 'mime' => $asset->mime, 'kind' => $asset->kind, 'width' => $asset->width, 'height' => $asset->height];
         }
 
         return $copied;

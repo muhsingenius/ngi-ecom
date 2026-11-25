@@ -33,39 +33,6 @@ beforeEach(function () {
     $this->shopPickup = PickupPoint::create(['name' => 'Our shop', 'address' => '1 Main Street', 'hours' => '9-6']);
 });
 
-function cartWith(int $qty = 3, string $size = 'M'): void
-{
-    $tee = Product::with(['variants.colour', 'colours', 'printAreas'])->where('slug', 'classic-t-shirt-standard')->first();
-    addToCart(savedDesign($tee), [['variant_id' => variantId($tee, 'White', $size), 'qty' => $qty]]);
-}
-
-function checkoutData(array $override = []): array
-{
-    return $override + [
-        'name' => 'Ama Mensah', 'phone' => '024 123 4567', 'email' => 'ama@example.test',
-        'fulfilment' => 'delivery', 'zone_id' => DeliveryZone::first()->id, 'address' => '12 Palm Street, Osu',
-    ];
-}
-
-function signed(array $payload, string $secret = 'sk_test_secret'): array
-{
-    $body = json_encode($payload);
-
-    return [$body, ['HTTP_X_PAYSTACK_SIGNATURE' => hash_hmac('sha512', $body, $secret), 'CONTENT_TYPE' => 'application/json']];
-}
-
-function webhook(array $payload, ?string $secret = 'sk_test_secret')
-{
-    [$body, $server] = signed($payload, $secret ?? '');
-
-    return test()->call('POST', '/webhooks/paystack', [], [], [], $server, $body);
-}
-
-function chargeSuccess(Payment $payment, array $override = []): array
-{
-    return ['event' => 'charge.success', 'data' => $override + ['reference' => $payment->reference, 'status' => 'success', 'amount' => (int) round($payment->amount * 100), 'currency' => 'GHS', 'channel' => 'mobile_money']];
-}
-
 describe('checkout page', function () {
     it('sends an empty cart back to the cart', function () {
         $this->get('/checkout')->assertRedirect('/cart');

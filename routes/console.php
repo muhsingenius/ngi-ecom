@@ -13,3 +13,6 @@ Artisan::command('inspire', function () {
 Schedule::command('queue:work --stop-when-empty')->everyMinute()->withoutOverlapping();
 
 Schedule::command('uploads:cleanup')->daily();
+
+// Proof then pay: approved but unpaid orders expire after the configured number of days.
+Schedule::command('orders:expire-proofs')->hourly();

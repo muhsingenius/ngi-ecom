@@ -17,34 +17,6 @@ beforeEach(function () {
     $this->capArea = $this->cap->printAreas->first(); // embroidery, 10 x 6 cm, max 6 colours, min 5 mm
 });
 
-function text(string $text = 'GO', int $size = 60, string $fill = '#ffffff', array $extra = []): array
-{
-    return $extra + ['type' => 'i-text', 'text' => $text, 'fontSize' => $size, 'scaleX' => 1, 'scaleY' => 1, 'fill' => $fill, 'fontFamily' => 'Anton'];
-}
-
-function state(array ...$objects): string
-{
-    return json_encode(['version' => '7', 'objects' => $objects]);
-}
-
-/** @param array<string, mixed> $override */
-function payload(Product $product, $area, string $state, array $override = [], ?string $png = null): array
-{
-    [$w, $h] = $area->exportPixels();
-
-    return array_replace_recursive([
-        'product_id' => $product->id,
-        'colour_id' => $product->colours->first()->id,
-        'name' => 'Test design',
-        'areas' => [[
-            'print_area_id' => $area->id,
-            'state' => $state,
-            'colours_count' => 1,
-            'export' => UploadedFile::fake()->createWithContent('print.png', $png ?? pngBytes($w, $h)),
-        ]],
-    ], $override);
-}
-
 it('saves a design with a print-ready 300 DPI file and a preview, privately', function () {
     $this->postJson('/designs', payload($this->cap, $this->capArea, state(text())))->assertCreated()->assertJsonStructure(['design_id', 'next']);
 

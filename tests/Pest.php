@@ -1,11 +1,14 @@
 <?php
 
+use App\Models\DeliveryZone;
 use App\Models\Design;
 use App\Models\DesignArea;
+use App\Models\Payment;
 use App\Models\Product;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -85,3 +88,67 @@ const ROLES = [
     'name' => ['x_cm' => 5, 'y_cm' => 2, 'width_cm' => 10, 'height_cm' => 3, 'font' => 'Anton', 'font_height_mm' => 30, 'fill' => '#ffffff', 'angle' => 0, 'sample' => 'NAME'],
     'number' => ['x_cm' => 5, 'y_cm' => 8, 'width_cm' => 8, 'height_cm' => 10, 'font' => 'Anton', 'font_height_mm' => 90, 'fill' => '#ffffff', 'angle' => 0, 'sample' => '10'],
 ];
+
+function cartWith(int $qty = 3, string $size = 'M', string $slug = 'classic-t-shirt-standard', array $roles = []): Design
+{
+    $product = Product::with(['variants.colour', 'colours', 'printAreas'])->where('slug', $slug)->first();
+    $design = savedDesign($product, roles: $roles);
+    addToCart($design, [['variant_id' => variantId($product, 'White', $size), 'qty' => $qty]]);
+
+    return $design;
+}
+
+function checkoutData(array $override = []): array
+{
+    return $override + [
+        'name' => 'Ama Mensah', 'phone' => '024 123 4567', 'email' => 'ama@example.test',
+        'fulfilment' => 'delivery', 'zone_id' => DeliveryZone::first()->id, 'address' => '12 Palm Street, Osu',
+    ];
+}
+
+function signed(array $payload, string $secret = 'sk_test_secret'): array
+{
+    $body = json_encode($payload);
+
+    return [$body, ['HTTP_X_PAYSTACK_SIGNATURE' => hash_hmac('sha512', $body, $secret), 'CONTENT_TYPE' => 'application/json']];
+}
+
+function webhook(array $payload, ?string $secret = 'sk_test_secret')
+{
+    [$body, $server] = signed($payload, $secret ?? '');
+
+    return test()->call('POST', '/webhooks/paystack', [], [], [], $server, $body);
+}
+
+function chargeSuccess(Payment $payment, array $override = []): array
+{
+    return ['event' => 'charge.success', 'data' => $override + ['reference' => $payment->reference, 'status' => 'success', 'amount' => (int) round($payment->amount * 100), 'currency' => 'GHS', 'channel' => 'mobile_money']];
+}
+
+function text(string $text = 'GO', int $size = 60, string $fill = '#ffffff', array $extra = []): array
+{
+    return $extra + ['type' => 'i-text', 'text' => $text, 'fontSize' => $size, 'scaleX' => 1, 'scaleY' => 1, 'fill' => $fill, 'fontFamily' => 'Anton'];
+}
+
+function state(array ...$objects): string
+{
+    return json_encode(['version' => '7', 'objects' => $objects]);
+}
+
+/** @param array<string, mixed> $override */
+function payload(Product $product, $area, string $state, array $override = [], ?string $png = null): array
+{
+    [$w, $h] = $area->exportPixels();
+
+    return array_replace_recursive([
+        'product_id' => $product->id,
+        'colour_id' => $product->colours->first()->id,
+        'name' => 'Test design',
+        'areas' => [[
+            'print_area_id' => $area->id,
+            'state' => $state,
+            'colours_count' => 1,
+            'export' => UploadedFile::fake()->createWithContent('print.png', $png ?? pngBytes($w, $h)),
+        ]],
+    ], $override);
+}

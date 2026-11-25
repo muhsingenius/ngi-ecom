@@ -57,7 +57,7 @@ class OrderService
         $proofRequired = $this->proofRequired($quote['quantity']);
         $timing = $this->settings->string('proof.timing');
 
-        return DB::transaction(function () use ($request, $data, $lines, $quote, $zone, $pickup, $deliveryFee, $proofRequired, $timing) {
+        $order = DB::transaction(function () use ($request, $data, $lines, $quote, $zone, $pickup, $deliveryFee, $proofRequired, $timing) {
             $order = Order::create([
                 'user_id' => $request->user()?->id,
                 'customer_name' => $data['name'], 'phone' => $data['phone'], 'email' => $data['email'],
@@ -112,6 +112,13 @@ class OrderService
 
             return $order;
         });
+
+        // Proof then pay: the proof goes out straight away, before any payment.
+        if ($order->status === OrderStatus::AwaitingProof) {
+            app(ProofService::class)->create($order);
+        }
+
+        return $order;
     }
 
     /**
@@ -120,6 +127,14 @@ class OrderService
     public function markPaid(Order $order): void
     {
         if ($order->isPaid()) {
+            return;
+        }
+
+        // Money arrived for an order that was already cancelled (e.g. it expired): keep it cancelled and ask for a refund.
+        if ($order->cancelled_at) {
+            $order->forceFill(['paid_at' => now(), 'flagged' => true])->save();
+            $order->record('paid_after_cancel', 'Payment received for a cancelled order. It needs a refund.');
+
             return;
         }
 
@@ -132,6 +147,8 @@ class OrderService
             $this->notify($order, 'Payment received', 'Thank you, your payment is confirmed.', [
                 'We are preparing a proof of your design for you to approve before we print.',
             ]);
+
+            app(ProofService::class)->create($order);
 
             return;
         }
@@ -160,6 +177,26 @@ class OrderService
         if ($shop = $this->settings->string('shop.notification_email')) {
             Mail::to($shop)->queue(new NewJobMail($order));
         }
+    }
+
+    /** Cancel an order and tell the customer. Refunding any payment is a separate admin action. */
+    public function cancel(Order $order, string $reason, ?int $userId = null): void
+    {
+        if ($order->cancelled_at) {
+            return;
+        }
+
+        $order->forceFill(['status' => OrderStatus::Cancelled, 'cancelled_at' => now(), 'cancel_reason' => $reason, 'proof_expires_at' => null])->save();
+        $order->proofs()->whereIn('status', ['sent', 'changes_requested'])->update(['status' => 'superseded']);
+        $order->record('cancelled', "Order cancelled: {$reason}", $userId);
+
+        $lines = [$reason.'.'];
+
+        if ($order->isPaid()) {
+            $lines[] = 'Your payment will be refunded. We will email you when the refund is on its way.';
+        }
+
+        $this->notify($order, 'Order cancelled', 'Your order has been cancelled.', $lines);
     }
 
     /**

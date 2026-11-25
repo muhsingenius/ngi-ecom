@@ -62,6 +62,17 @@ class Order extends Model
         return $this->hasMany(OrderEvent::class)->orderBy('created_at')->orderBy('id');
     }
 
+    public function proofs(): HasMany
+    {
+        return $this->hasMany(Proof::class)->orderBy('version');
+    }
+
+    /** The proof the customer should currently be looking at. */
+    public function latestProof(): ?Proof
+    {
+        return $this->proofs()->reorder('version', 'desc')->where('status', '!=', 'superseded')->first();
+    }
+
     public function deliveryZone(): BelongsTo
     {
         return $this->belongsTo(DeliveryZone::class);

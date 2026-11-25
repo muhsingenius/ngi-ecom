@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Design;
 use App\Models\DesignArea;
 use App\Models\DesignAsset;
+use App\Models\OrderLine;
 use App\Models\Product;
 use App\Models\ProductColour;
 use App\Services\DesignRules;
+use App\Services\ProofService;
 use App\Support\Png;
 use App\Support\PrivateFile;
 use Illuminate\Http\JsonResponse;
@@ -81,6 +83,11 @@ class DesignController extends Controller
 
         if ($design && $design->product_id !== $product->id) {
             return response()->json(['message' => 'That design belongs to a different product.'], 422);
+        }
+
+        // A design opened to revise an order can only be saved while that order still awaits proof approval.
+        if ($design?->revises_order_line_id && ! app(ProofService::class)->canRevise(OrderLine::findOrFail($design->revises_order_line_id)->order)) {
+            return response()->json(['message' => 'This order has already moved on, so the design can no longer be changed here. Please contact us.'], 422);
         }
 
         $errors = [];
@@ -190,6 +197,13 @@ class DesignController extends Controller
 
             return $design;
         });
+
+        if ($design->revises_order_line_id) {
+            // Replace the order's print files with this version and send a fresh proof.
+            $order = app(ProofService::class)->applyRevision($design);
+
+            return response()->json(['design_id' => $design->id, 'next' => $order->url()]);
+        }
 
         return response()->json(['design_id' => $design->id, 'next' => route('designs.order', $design)], $design->wasRecentlyCreated ? 201 : 200);
     }

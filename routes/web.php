@@ -14,6 +14,7 @@ use App\Http\Controllers\DesignOrderController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaystackWebhookController;
 use App\Http\Controllers\PrivateFileController;
+use App\Http\Controllers\ProofController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'storefront.home')->name('home');
@@ -37,6 +38,8 @@ Route::middleware('designer')->group(function () {
     Route::post('/cart/quote', [CartController::class, 'quote'])->middleware('throttle:120,1')->name('cart.quote');
     Route::delete('/cart/{line}', [CartController::class, 'destroy'])->name('cart.destroy');
 
+    Route::post('/proofs/{token}/revise/{line}', [ProofController::class, 'revise'])->name('proofs.revise');
+
     Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
     Route::post('/checkout', [CheckoutController::class, 'store'])->middleware('throttle:10,1')->name('checkout.store');
 
@@ -48,6 +51,10 @@ Route::middleware('designer')->group(function () {
 Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 Route::get('/orders/{order}/status', [OrderController::class, 'status'])->name('orders.status');
 Route::post('/orders/{order}/pay', [OrderController::class, 'pay'])->middleware('throttle:10,1')->name('orders.pay');
+Route::get('/proofs/{token}', [ProofController::class, 'show'])->name('proofs.show');
+Route::get('/proofs/{token}/image', [ProofController::class, 'image'])->name('proofs.image');
+Route::post('/proofs/{token}/approve', [ProofController::class, 'approve'])->middleware('throttle:20,1')->name('proofs.approve');
+Route::post('/proofs/{token}/changes', [ProofController::class, 'changes'])->middleware('throttle:20,1')->name('proofs.changes');
 Route::post('/webhooks/paystack', PaystackWebhookController::class)->name('webhooks.paystack');
 
 Route::middleware('auth')->prefix('account')->group(function () {

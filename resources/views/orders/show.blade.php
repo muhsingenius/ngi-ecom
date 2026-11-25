@@ -37,6 +37,14 @@
                 <p class="mt-4 rounded-control bg-brand-tint px-4 py-3 text-sm text-brand-strong" role="status">Confirming your payment with Paystack. This page updates by itself.</p>
             @endif
 
+            @php($openProof = $order->latestProof())
+            @if ($openProof && $openProof->isOpen() && ! $order->cancelled_at)
+                <div class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-card bg-accent-tint p-5">
+                    <div><p class="font-semibold text-ink">Your proof is ready</p><p class="text-sm text-copy">Please check it and approve it, or ask for changes.</p></div>
+                    <a href="{{ $openProof->url() }}" class="btn btn-brand">Review your proof</a>
+                </div>
+            @endif
+
             @if ($payable)
                 <form method="POST" action="{{ route('orders.pay', ['order' => $order->number, 't' => $token]) }}" class="mt-6">
                     @csrf
@@ -100,7 +108,7 @@
             <div class="mt-8">
                 <h2 class="type-heading">Progress</h2>
                 <ol class="mt-3 space-y-3 border-l-2 border-line pl-5">
-                    @foreach ($order->events->whereIn('type', ['placed', 'paid', 'proof_sent', 'proof_approved', 'released', 'ready', 'dispatched', 'picked_up', 'completed', 'cancelled', 'refunded']) as $event)
+                    @foreach ($order->events->whereIn('type', ['placed', 'paid', 'proof_sent', 'proof_changes', 'design_revised', 'proof_approved', 'released', 'ready', 'dispatched', 'picked_up', 'completed', 'cancelled', 'refunded']) as $event)
                         <li class="relative text-sm"><span class="absolute -left-[1.6rem] top-1.5 size-2.5 rounded-full bg-brand"></span><span class="font-semibold text-ink">{{ $event->message }}</span> <span class="text-muted">· {{ $event->created_at->format('j M, g:ia') }}</span></li>
                     @endforeach
                 </ol>
