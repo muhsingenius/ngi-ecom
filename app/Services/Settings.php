@@ -19,47 +19,65 @@ class Settings
     public const CACHE_KEY = 'settings.all';
 
     /**
-     * @return array<string, array{type: string, default: mixed, rules: list<mixed>}>
+     * @return array<string, array{label: string, help: string, type: string, default: mixed, rules: list<mixed>, options?: array<string, string>}>
      */
     public static function definitions(): array
     {
         return [
             'pricing.tier_scope' => [
+                'label' => 'Quantity price tier scope',
+                'help' => 'Which quantity picks the price tier: one product with one design (default), one design across products, or the whole order. A product can override this.',
+                'options' => ['product_design' => 'Per product and design', 'design' => 'Per design across products', 'order' => 'Whole order'],
                 'type' => 'string',
                 'default' => 'product_design',
                 'rules' => ['required', 'in:product_design,design,order'],
             ],
             'proof.threshold' => [
+                'label' => 'Proof threshold (units)',
+                'help' => 'Orders with at least this many units need a proof before production. 0 = every order gets a proof. Blank = proofs off.',
                 'type' => 'int',
                 'default' => 20,
                 'rules' => ['nullable', 'integer', 'min:0'],
             ],
             'proof.timing' => [
+                'label' => 'Proof timing',
+                'help' => 'Pay then proof: the customer pays first, then approves the proof. Proof then pay: they approve first, then pay. Can be overridden per order.',
+                'options' => ['pay_then_proof' => 'Pay then proof', 'proof_then_pay' => 'Proof then pay'],
                 'type' => 'string',
                 'default' => 'pay_then_proof',
                 'rules' => ['required', 'in:pay_then_proof,proof_then_pay'],
             ],
             'proof.max_revisions' => [
+                'label' => 'Max revision rounds',
+                'help' => 'After this many rounds of requested changes the order is flagged for admin follow-up.',
                 'type' => 'int',
                 'default' => 3,
                 'rules' => ['required', 'integer', 'min:0'],
             ],
             'proof.unpaid_expiry_days' => [
+                'label' => 'Proof-then-pay expiry (days)',
+                'help' => 'Approved but unpaid orders are cancelled after this many days and the customer is emailed.',
                 'type' => 'int',
                 'default' => 7,
                 'rules' => ['required', 'integer', 'min:1'],
             ],
             'delivery.free_threshold' => [
+                'label' => 'Free delivery threshold (order value)',
+                'help' => 'Orders at or above this amount get free delivery. Blank = off. A delivery zone can set its own threshold.',
                 'type' => 'float',
                 'default' => null,
                 'rules' => ['nullable', 'numeric', 'min:0'],
             ],
             'shop.notification_email' => [
+                'label' => 'Print shop notification email',
+                'help' => 'New production jobs are emailed here.',
                 'type' => 'string',
                 'default' => null,
                 'rules' => ['nullable', 'email', 'max:255'],
             ],
             'orders.turnaround_days' => [
+                'label' => 'Turnaround shown at checkout (days)',
+                'help' => 'Shown to customers as the typical production time.',
                 'type' => 'int',
                 'default' => 5,
                 'rules' => ['required', 'integer', 'min:0'],
@@ -126,7 +144,7 @@ class Settings
             $value = null;
         }
 
-        $validated = Validator::make(['value' => $value], ['value' => $definition['rules']])
+        $validated = Validator::make(['value' => $value], ['value' => $definition['rules']], [], ['value' => $definition['label']])
             ->validate()['value'] ?? null;
 
         $validated = $this->cast($definition['type'], $validated);
