@@ -179,6 +179,37 @@ class OrderService
         }
     }
 
+    /**
+     * The print shop moves a job through Queued -> Printing -> Ready. Reaching Ready tells the customer.
+     */
+    public function setStage(Order $order, string $stage, ?int $userId = null): void
+    {
+        abort_unless(in_array($stage, ['queued', 'printing', 'ready'], true) && in_array($order->status, [OrderStatus::InProduction, OrderStatus::Ready], true), 422);
+
+        if ($order->production_stage === $stage) {
+            return;
+        }
+
+        $order->forceFill([
+            'production_stage' => $stage,
+            'status' => $stage === 'ready' ? OrderStatus::Ready : OrderStatus::InProduction,
+        ])->save();
+
+        $order->record($stage === 'ready' ? 'ready' : 'stage', match ($stage) {
+            'queued' => 'Back in the print queue.',
+            'printing' => 'Printing started.',
+            'ready' => $order->isDelivery() ? 'Ready for dispatch.' : 'Ready for pickup.',
+        }, $userId);
+
+        if ($stage === 'ready') {
+            $where = $order->isDelivery()
+                ? "We will dispatch it to {$order->zone_name} shortly and email you the courier details."
+                : "Collect it from {$order->pickup_name}, {$order->pickup_address}.";
+
+            $this->notify($order, 'Your order is ready', 'Your order is ready.', [$where]);
+        }
+    }
+
     /** Cancel an order and tell the customer. Refunding any payment is a separate admin action. */
     public function cancel(Order $order, string $reason, ?int $userId = null): void
     {

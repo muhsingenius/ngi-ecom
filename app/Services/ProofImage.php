@@ -35,7 +35,7 @@ class ProofImage
         foreach ($areas->values() as $i => $area) {
             $x = self::GAP + ($i % $cols) * (self::TILE_W + self::GAP);
             $y = self::GAP + intdiv($i, $cols) * (self::TILE_H + self::GAP);
-            $this->tile($sheet, $area, $x, $y);
+            imagecopy($sheet, $this->tile($area), $x, $y, 0, 0, self::TILE_W, self::TILE_H);
         }
 
         ob_start();
@@ -44,7 +44,16 @@ class ProofImage
         return (string) ob_get_clean();
     }
 
-    private function tile(GdImage $sheet, OrderArea $area, int $x, int $y): void
+    /** One print area's artwork placed on its mockup, as JPEG bytes (used on job sheets). */
+    public function placement(OrderArea $area): string
+    {
+        ob_start();
+        imagejpeg($this->tile($area), null, 88);
+
+        return (string) ob_get_clean();
+    }
+
+    private function tile(OrderArea $area): GdImage
     {
         $tile = imagecreatetruecolor(self::TILE_W, self::TILE_H);
         imagefill($tile, 0, 0, imagecolorallocate($tile, 255, 255, 255));
@@ -75,7 +84,7 @@ class ProofImage
             $this->fit($tile, $art, $boxX, $boxY, $boxW, $boxH);
         }
 
-        imagecopy($sheet, $tile, $x, $y, 0, 0, self::TILE_W, self::TILE_H);
+        return $tile;
     }
 
     private function load(?string $path): ?GdImage

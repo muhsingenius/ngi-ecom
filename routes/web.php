@@ -15,6 +15,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PaystackWebhookController;
 use App\Http\Controllers\PrivateFileController;
 use App\Http\Controllers\ProofController;
+use App\Http\Controllers\Shop\JobController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'storefront.home')->name('home');
@@ -107,7 +108,16 @@ Route::middleware(['auth', 'role:admin', 'verified'])
 Route::middleware(['auth', 'role:shop', 'verified'])
     ->prefix('shop')
     ->group(function () {
-        Route::view('/', 'shop.jobs')->name('shop.jobs');
+        Route::get('/', [JobController::class, 'index'])->name('shop.jobs');
+
+        Route::controller(JobController::class)->prefix('jobs/{order}')->group(function () {
+            Route::get('/', 'show')->name('shop.jobs.show');
+            Route::post('stage', 'stage')->name('shop.jobs.stage');
+            Route::get('sheet', 'sheet')->name('shop.jobs.sheet');
+            Route::get('files', 'files')->name('shop.jobs.files');
+            Route::get('files/{area}', 'file')->name('shop.jobs.file');
+            Route::get('placement/{area}', 'placement')->name('shop.jobs.placement');
+        });
     });
 
 // Protected download of private files via signed, expiring URLs (see App\Support\PrivateFile).
